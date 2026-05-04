@@ -30,6 +30,7 @@ class _ConvNd(nn.Module):
         self.pi = args.pi
         self.rho = args.rho
         self.device = args.device
+        self.args = args
         self.static = getattr(args, 'static', False)
 
 
@@ -39,41 +40,54 @@ class _ConvNd(nn.Module):
             self.weight_rho = nn.Parameter(self.rho + torch.zeros(in_channels, out_channels//groups,*kernel_size).normal_(0., 0.1))
 
         else:
-            # self.weight_mu = nn.Parameter(torch.Tensor(out_channels, in_channels//groups, *kernel_size).normal_(0., 0.1))
-
             self.weight_mu = nn.Parameter(torch.empty((out_channels, in_channels//groups, *kernel_size),
                                      device=self.device, dtype=torch.float32).normal_(0., 0.1), requires_grad=True)
-            self.weight_rho = nn.Parameter(self.rho + torch.empty((out_channels, in_channels//groups, *kernel_size),
-                                        device=self.device, dtype=torch.float32).normal_(0.,0.1), requires_grad=True)
+            
+            w_shape = (out_channels, in_channels//groups, *kernel_size)
+            w_rho_base = self._get_init_rho(w_shape, args)
+            self.weight_rho = nn.Parameter(w_rho_base + torch.empty((out_channels, in_channels//groups, *kernel_size),
+                                         device=self.device, dtype=torch.float32).normal_(0.,0.1), requires_grad=True)
 
-            # self.weight_mu = nn.Parameter(torch.normal(mean=0., std=0.1, size=(out_channels, in_channels//groups, *kernel_size)))
-            # self.weight_rho = nn.Parameter(self.rho + torch.zeros(out_channels, in_channels//groups,*kernel_size).normal_(0., 0.1))
-                
         self.weight = VariationalPosterior(self.weight_mu, self.weight_rho, self.device).to(self.device)
 
-        
-        # Bias parameters [out_channel]
         if self.use_bias:
-            # self.bias_mu = nn.Parameter(torch.Tensor(self.out_channels).normal_(0., 0.1))
-            # self.bias_mu = nn.Parameter(torch.zeros(self.out_channels).normal_(0., 0.1))
-            # self.bias_rho = nn.Parameter(self.rho + torch.zeros(self.out_channels).normal_(0., 0.1))
             self.bias_mu = nn.Parameter(torch.empty((self.out_channels),
                                       device=self.device, dtype=torch.float32).normal_(0., 0.1),requires_grad=True)
-            self.bias_rho = nn.Parameter(self.rho + nn.Parameter(torch.empty(self.out_channels,
-                                      device=self.device, dtype=torch.float32).normal_(0., 0.1),requires_grad=True))
+            
+            b_rho_base = self._get_init_rho((self.out_channels,), args)
+            self.bias_rho = nn.Parameter(b_rho_base + torch.empty((self.out_channels,),
+                                      device=self.device, dtype=torch.float32).normal_(0., 0.1), requires_grad=True)
 
             self.bias = VariationalPosterior(self.bias_mu, self.bias_rho, self.device).to(self.device)
         else:
             self.register_parameter('bias', None)            
         
         # Prior distributions
-        self.weight_prior = Prior(args).to(self.device)
+        from .distributions import UnimodalPrior, StdevMixturePrior
+        reg_mode = getattr(args, 'regularization', 'bbb')
+        if reg_mode == 'unimodal':
+            self.weight_prior = UnimodalPrior(args).to(self.device)
+            if self.use_bias: self.bias_prior = UnimodalPrior(args).to(self.device)
+        elif reg_mode == 'sns':
+            self.weight_prior = StdevMixturePrior(args).to(self.device)
+            if self.use_bias: self.bias_prior = StdevMixturePrior(args).to(self.device)
+        else: # bbb
+            self.weight_prior = Prior(args).to(self.device)
+            if self.use_bias: self.bias_prior = Prior(args).to(self.device)
 
-        if self.use_bias:      
-            self.bias_prior = Prior(args).to(self.device)
 
-        self.log_prior = 0
-        self.log_variational_posterior = 0
+    def _get_init_rho(self, shape, args):
+        import math
+        if getattr(args, 'rho_init_mode', 'gaussian') == 'bimodal':
+            rho1 = math.log(math.expm1(args.sigma_prior1))
+            rho2 = math.log(math.expm1(args.sigma_prior2))
+            mask = (torch.rand(shape, device=self.device) < args.pi).float()
+            return mask * rho1 + (1. - mask) * rho2
+        else:
+            return torch.full(shape, self.rho, device=self.device)
+
+        self.log_prior = torch.tensor(0.0, device=self.device)
+        self.log_variational_posterior = torch.tensor(0.0, device=self.device)
         
         self.mask_flag = False
 
@@ -112,14 +126,23 @@ class BayesianConv2D(_ConvNd):
             bias = self.bias.mu if self.use_bias else None
 
         if self.training or calculate_log_probs:
-            if self.use_bias:
-                self.log_prior = self.weight_prior.log_prob(weight) + self.bias_prior.log_prob(bias)
-                self.log_variational_posterior = self.weight.log_prob(weight) + self.bias.log_prob(bias)
-            else:
-                self.log_prior = self.weight_prior.log_prob(weight)
-                self.log_variational_posterior = self.weight.log_prob(weight)
+            reg_mode = getattr(self.args, 'regularization', 'bbb')
             
+            if reg_mode in ['bbb', 'unimodal']:
+                if self.use_bias:
+                    self.log_prior = self.weight_prior.log_prob(weight) + self.bias_prior.log_prob(bias)
+                    self.log_variational_posterior = self.weight.log_prob(weight) + self.bias.log_prob(bias)
+                else:
+                    self.log_prior = self.weight_prior.log_prob(weight)
+                    self.log_variational_posterior = self.weight.log_prob(weight)
+            elif reg_mode == 'sns':
+                if self.use_bias:
+                    self.log_prior = self.weight_prior.log_prob(self.weight.sigma) + self.bias_prior.log_prob(self.bias.sigma)
+                else:
+                    self.log_prior = self.weight_prior.log_prob(self.weight.sigma)
+                self.log_variational_posterior = torch.tensor(0.0, device=self.device)
         else:
-            self.log_prior, self.log_variational_posterior = 0, 0
+            self.log_prior = torch.tensor(0.0, device=self.device)
+            self.log_variational_posterior = torch.tensor(0.0, device=self.device)
         
         return F.conv2d(input, weight, bias, self.stride, self.padding, self.dilation, self.groups)

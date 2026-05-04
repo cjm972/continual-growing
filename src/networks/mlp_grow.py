@@ -13,7 +13,7 @@ class BayesianMLP(torch.nn.Module):
         self.samples = args.samples
         self.device = args.device
         self.sbatch = args.sbatch
-        self.init_lr = args.lr
+        # self.init_lr = args.lr
         # dim=60  #100k
         # dim=1200
         dim=args.hidden_n

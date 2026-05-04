@@ -21,26 +21,39 @@ parser.add_argument('--cl_mode',            default='domain-incremental', type=s
 # Training parameters
 parser.add_argument('--output',             default='',                     type=str,   help='')
 parser.add_argument('--checkpoint_dir',     default='../checkpoints/',    type=str,   help='')
-parser.add_argument('--epochs',            default=1,            type=int,   help='')
+parser.add_argument('--epochs',            default=10,            type=int,   help='')
 parser.add_argument('--sbatch',             default=64,             type=int,   help='')
-parser.add_argument('--lr',                 default=0.01,           type=float, help='')  # use 0.3 for non-mnist datasets
+parser.add_argument('--lr_mu',              default=0.01,           type=float, help='Learning rate for means (mu)')
+parser.add_argument('--lr_sigma',           default=0.01,           type=float, help='Learning rate for uncertainties (rho)')
 parser.add_argument('--layers',            default=1,              type=int,   help='')
-parser.add_argument('--hidden_n',            default=64,           type=int, help='') # default: 1200
+parser.add_argument('--hidden_n',            default=16,           type=int, help='') # default: 1200
 parser.add_argument('--parameter',          default='',             type=str,   help='')
 
-# GROW HYPER-PARAMETERS
-parser.add_argument('--samples',            default='10',           type=int,     help='Number of Monte Carlo samples')
-parser.add_argument('--rho',                default='-3',           type=float,   help='Initial rho')
-parser.add_argument('--sig1',               default='0.0',          type=float,   help='STD foor the 1st prior pdf in scaled mixture Gaussian')
-parser.add_argument('--sig2',               default='6.0',          type=float,   help='STD foor the 2nd prior pdf in scaled mixture Gaussian')
-parser.add_argument('--pi',                 default='0.25',         type=float,   help='weighting factor for prior')
+# Bayesian hyper-parameters
+parser.add_argument('--samples',            default=10,           type=int,     help='Number of Monte Carlo samples')
+parser.add_argument('--sigma_init',         default=0.1,       type=float,   help='Initial standard deviation (posterior)')
+parser.add_argument('--sigma_prior1',       default=1.0,            type=float,   help='Stdev for the 1st prior pdf in scaled mixture Gaussian')
+parser.add_argument('--sigma_prior2',       default=0.00001,       type=float,   help='Stdev for the 2nd prior pdf in scaled mixture Gaussian')
+parser.add_argument('--pi',                 default=0.25,         type=float,   help='weighting factor for prior')
+parser.add_argument('--rho_init_mode',      default='gaussian',   type=str,     choices=['gaussian', 'bimodal'], help='Initialization mode for uncertainties (rho)')
+parser.add_argument('--regularization',     default='sns',        type=str,     choices=['bbb', 'sns', 'unimodal'], help='Regularization method: bbb (Bayes by Backprop), sns (Spike & Slab on stdev), unimodal (Gaussian prior)')
 parser.add_argument('--arch',               default='mlp',          type=str,     help='Bayesian Neural Network architecture')
 parser.add_argument('--static',            action='store_true',    help='Use only means (no Bayesian sampling)')
+
+# Growth hyper-parameters
+parser.add_argument('--growth_rate',        default=5,              type=int,     help='Number of neurons to add per growth step (0 to disable)')
+parser.add_argument('--growth_saturation',  default=0.2,            type=float,   help='Fraction of new parameters that must be saturated to grow')
+parser.add_argument('--growth_threshold',   default=0.05,           type=float,   help='Stdev threshold below which a parameter is considered saturated')
 
 parser.add_argument('--resume',          default='no',            type=str,   help='resume?')
 parser.add_argument('--sti',             default=0,               type=int,   help='starting task?')
 
 args=parser.parse_args()
+
+import math
+args.rho = math.log(math.expm1(args.sigma_init))
+args.sig1 = -math.log(args.sigma_prior1)
+args.sig2 = -math.log(args.sigma_prior2)
 utils.print_arguments(args)
 
 ########################################################################################################################
