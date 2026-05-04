@@ -71,7 +71,7 @@ def save_log(taskcla, acc, lss, data, output_path):
 
 def make_directories(args):
     if args.output=='':
-        args.output = '{}_{}'.format(args.experiment,args.approach)
+        args.output = '{}_{}'.format(args.experiment,args.trainer)
         print (args.output)
     checkpoint = os.path.join(args.checkpoint_dir, args.output)
     if not os.path.exists(args.checkpoint_dir):
@@ -97,8 +97,11 @@ def print_log_acc_bwt(args, acc, lss):
     print()
     print()
 
-    ucb_bwt = (acc[-1] - np.diag(acc)).mean()
-    print ('BWT : {:5.2f}%'.format(ucb_bwt))
+    grow_bwt = (acc[-1] - np.diag(acc)).mean()
+    print ('BWT : {:5.2f}%'.format(grow_bwt))
+
+    grow_fwt = (acc[0] - np.diag(acc)).mean()
+    print ('FWT : {:5.2f}%'.format(grow_fwt))
 
     print('*'*100)
     print('Done!')
@@ -109,15 +112,15 @@ def print_log_acc_bwt(args, acc, lss):
     logs['taskcla'] = args.taskcla
     logs['acc'] = acc
     logs['loss'] = lss
-    logs['bwt'] = ucb_bwt
+    logs['bwt'] = grow_bwt
     logs['rii'] = np.diag(acc)
     logs['rij'] = acc[-1]
 
     # pickle
-    path = os.path.join(args.checkpoint, '{}_{}_seed_{}.p'.format(args.experiment,args.approach, args.seed))
+    path = os.path.join(args.checkpoint, '{}_{}_seed_{}.p'.format(args.experiment,args.trainer, args.seed))
     with open(path, 'wb') as output:
         pickle.dump(logs, output)
 
     print ("Log file saved in ", path)
-    return avg_acc, ucb_bwt
+    return avg_acc, grow_bwt
 

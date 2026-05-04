@@ -45,6 +45,73 @@ class BayesianLinear(nn.Module):
 
         self.mask_flag = False
 
+        # Boolean masks to track newly added parameters
+        self.register_buffer('weight_mask_new', torch.zeros((out_features, in_features), dtype=torch.bool, device=self.device))
+        if self.use_bias:
+            self.register_buffer('bias_mask_new', torch.zeros(out_features, dtype=torch.bool, device=self.device))
+        else:
+            self.register_buffer('bias_mask_new', None)
+
+
+    def grow_output(self, n_new=1):
+        """Add n_new output units with fresh initialization (new rows in weight, new bias entries)."""
+        device = self.device
+
+        # New weight rows: mu from N(0, 0.1), rho from rho_init + N(0, 0.1)
+        new_w_mu = torch.empty((n_new, self.in_features), device=device, dtype=torch.float32).normal_(0., 0.1)
+        new_w_rho = self.rho + torch.empty((n_new, self.in_features), device=device, dtype=torch.float32).normal_(0., 0.1)
+
+        self.weight_mu = nn.Parameter(torch.cat([self.weight_mu.data, new_w_mu], dim=0), requires_grad=True)
+        self.weight_rho = nn.Parameter(torch.cat([self.weight_rho.data, new_w_rho], dim=0), requires_grad=True)
+
+        self.weight_mask_new.fill_(False)
+        new_weight_mask = torch.ones((n_new, self.in_features), dtype=torch.bool, device=device)
+        self.weight_mask_new = torch.cat([self.weight_mask_new, new_weight_mask], dim=0)
+
+        if self.use_bias:
+            new_b_mu = torch.empty((n_new,), device=device, dtype=torch.float32).normal_(0., 0.1)
+            new_b_rho = self.rho + torch.empty((n_new,), device=device, dtype=torch.float32).normal_(0., 0.1)
+
+            self.bias_mu = nn.Parameter(torch.cat([self.bias_mu.data, new_b_mu], dim=0), requires_grad=True)
+            self.bias_rho = nn.Parameter(torch.cat([self.bias_rho.data, new_b_rho], dim=0), requires_grad=True)
+
+            self.bias_mask_new.fill_(False)
+            new_bias_mask = torch.ones(n_new, dtype=torch.bool, device=device)
+            self.bias_mask_new = torch.cat([self.bias_mask_new, new_bias_mask], dim=0)
+
+        self.out_features += n_new
+        self._rebuild_posteriors()
+
+
+    def grow_input(self, n_new=1):
+        """Add n_new input connections with fresh initialization (new columns in weight)."""
+        device = self.device
+
+        # New weight columns: mu from N(0, 0.1), rho from rho_init + N(0, 0.1)
+        new_w_mu = torch.empty((self.out_features, n_new), device=device, dtype=torch.float32).normal_(0., 0.1)
+        new_w_rho = self.rho + torch.empty((self.out_features, n_new), device=device, dtype=torch.float32).normal_(0., 0.1)
+
+        self.weight_mu = nn.Parameter(torch.cat([self.weight_mu.data, new_w_mu], dim=1), requires_grad=True)
+        self.weight_rho = nn.Parameter(torch.cat([self.weight_rho.data, new_w_rho], dim=1), requires_grad=True)
+
+        self.weight_mask_new.fill_(False)
+        new_weight_mask = torch.ones((self.out_features, n_new), dtype=torch.bool, device=device)
+        self.weight_mask_new = torch.cat([self.weight_mask_new, new_weight_mask], dim=1)
+
+        # Bias is unaffected by input growth, but older features are no longer "new"
+        if self.use_bias and self.bias_mask_new is not None:
+            self.bias_mask_new.fill_(False)
+
+        self.in_features += n_new
+        self._rebuild_posteriors()
+
+
+    def _rebuild_posteriors(self):
+        """Rebuild VariationalPosterior objects after parameter resize."""
+        self.weight = VariationalPosterior(self.weight_mu, self.weight_rho, self.device)
+        if self.use_bias:
+            self.bias = VariationalPosterior(self.bias_mu, self.bias_rho, self.device)
+
 
     def prune_module(self, mask):
         self.mask_flag = True 
