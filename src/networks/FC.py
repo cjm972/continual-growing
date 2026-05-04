@@ -17,6 +17,7 @@ class BayesianLinear(nn.Module):
         self.use_bias = use_bias
         self.device = args.device
         self.rho = args.rho
+        self.static = getattr(args, 'static', False)
 
         # Variational Posterior Distributions
         self.weight_mu = nn.Parameter(torch.empty((out_features, in_features),
@@ -125,7 +126,7 @@ class BayesianLinear(nn.Module):
             # if self.use_bias:
             #     self.bias = VariationalPosterior(self.pruned_bias_mu, self.pruned_bias_rho)
 
-        if self.training or sample:
+        if (self.training or sample) and not self.static:
             weight = self.weight.sample()
             bias = self.bias.sample() if self.use_bias else None
             

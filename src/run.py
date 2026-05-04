@@ -14,7 +14,7 @@ parser.add_argument('--device',             default='mps',       type=str,   hel
 parser.add_argument('--wandb_mode',         default='online',       type=str,   help='Online or offline for wandb')
 parser.add_argument('--experiment',         default='mnist5',       type=str,   required=True,
                                             choices=['mnist2','mnist5','pmnist','cifar','mixture'])
-parser.add_argument('--trainer',           default='grow',            type=str,   help='acl')
+parser.add_argument('--train_mode',         default='grow',            type=str,   help='continual growth or static joint')
 parser.add_argument('--data_path',          default='../data/',            type=str,   help='gpu id')
 parser.add_argument('--cl_mode',            default='domain-incremental', type=str, choices=['task-incremental', 'domain-incremental'], help='Continual learning mode')
 
@@ -35,6 +35,7 @@ parser.add_argument('--sig1',               default='0.0',          type=float, 
 parser.add_argument('--sig2',               default='6.0',          type=float,   help='STD foor the 2nd prior pdf in scaled mixture Gaussian')
 parser.add_argument('--pi',                 default='0.25',         type=float,   help='weighting factor for prior')
 parser.add_argument('--arch',               default='mlp',          type=str,     help='Bayesian Neural Network architecture')
+parser.add_argument('--static',            action='store_true',    help='Use only means (no Bayesian sampling)')
 
 parser.add_argument('--resume',          default='no',            type=str,   help='resume?')
 parser.add_argument('--sti',             default=0,               type=int,   help='starting task?')
@@ -73,7 +74,7 @@ elif args.experiment=='mixture':
     from dataloaders import mixture as dataloader
 
 # Args -- Trainer
-if args.trainer=='grow':
+if args.train_mode=='grow':
     from train import trainer as trainer_module
 
 # Args -- Network
@@ -127,7 +128,7 @@ for t,ncla in taskcla[args.sti:]:
     print('Task {:2d} ({:s})'.format(t,data[t]['name']))
     print('*'*100)
 
-    if args.trainer == 'joint':
+    if args.train_mode == 'joint':
         # Get data. We do not put it to GPU
         if t==0:
             xtrain=data[t]['train']['x']
@@ -168,7 +169,7 @@ for t,ncla in taskcla[args.sti:]:
 
     # Save
     print('Save at '+args.checkpoint)
-    np.savetxt(os.path.join(args.checkpoint,'{}_{}_{}.txt'.format(args.experiment,args.trainer,args.seed)),acc,'%.5f')
+    np.savetxt(os.path.join(args.checkpoint,'{}_{}_{}.txt'.format(args.experiment,args.train_mode,args.seed)),acc,'%.5f')
 
 
 utils.print_log_acc_bwt(args, acc, lss)

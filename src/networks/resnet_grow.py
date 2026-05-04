@@ -7,6 +7,8 @@ from .BatchNorm import BayesianBatchNorm2d
 from .FC import BayesianLinear
 
 
+# TODO: add growth logic in here! Not yet implemented
+
 
 def conv3x3(in_planes, out_planes, args, stride=1):
     return BayesianConv2D(in_planes, out_planes, 3, args=args, stride=stride, padding=1, use_bias=True)

@@ -30,6 +30,7 @@ class _ConvNd(nn.Module):
         self.pi = args.pi
         self.rho = args.rho
         self.device = args.device
+        self.static = getattr(args, 'static', False)
 
 
         if transposed:
@@ -102,7 +103,7 @@ class BayesianConv2D(_ConvNd):
             # if self.use_bias:
             #     self.bias = VariationalPosterior(self.bias_mu, self.bias_rho)
 
-        if self.training or sample:
+        if (self.training or sample) and not self.static:
             weight = self.weight.sample()
             bias = self.bias.sample() if self.use_bias else None
                 

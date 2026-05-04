@@ -35,6 +35,7 @@ class Trainer(object):
 
         self.modules_names_with_cls = self.find_modules_names(with_classifier=True)
         self.modules_names_without_cls = self.find_modules_names(with_classifier=False)
+        self.static = getattr(args, 'static', False)
 
 
 
@@ -131,8 +132,8 @@ class Trainer(object):
     
     def update_lr(self, t, lr=None, adaptive_lr=False):
         params_dict = []
-        if t==0:
-            params_dict.append({'params': self.model.parameters(), 'lr': self.init_lr})
+        if t==0 or self.static:
+            params_dict.append({'params': self.model.parameters(), 'lr': self.init_lr if lr is None else lr})
         else:
             for name in self.modules_names_without_cls:
                 n = name.split('.')
@@ -175,6 +176,11 @@ class Trainer(object):
         (next hidden + all classifier heads) to accept the wider input.
         Returns a fresh params_dict reflecting the new parameters."""
 
+        # only grow the network if the most recent generation has a very low rho (lower than some hyperparameter threshold called growth_threshold)
+        # if args.growth_threshold is None:
+        #     growth_threshold = 0.05
+        
+        
         # Collect hidden layers in order (everything that is a BayesianLinear but not a classifier)
         hidden_layers = []
         for name, m in self.model.named_modules():

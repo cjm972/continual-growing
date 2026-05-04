@@ -22,6 +22,7 @@ class _BatchNorm(nn.Module):
         self.pi = args.pi
         self.rho = args.rho
         self.device = args.device
+        self.static = getattr(args, 'static', False)
 
         if self.affine:
             # Weight parameters
@@ -89,7 +90,7 @@ class _BatchNorm(nn.Module):
 
 
 
-        if self.training or sample:
+        if (self.training or sample) and not self.static:
             weight = self.weight.sample()
             bias = self.bias.sample()
         else:
