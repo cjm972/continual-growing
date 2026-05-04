@@ -16,6 +16,7 @@ parser.add_argument('--experiment',         default='mnist5',       type=str,   
                                             choices=['mnist2','mnist5','pmnist','cifar','mixture'])
 parser.add_argument('--trainer',           default='grow',            type=str,   help='acl')
 parser.add_argument('--data_path',          default='../data/',            type=str,   help='gpu id')
+parser.add_argument('--cl_mode',            default='domain-incremental', type=str, choices=['task-incremental', 'domain-incremental'], help='Continual learning mode')
 
 # Training parameters
 parser.add_argument('--output',             default='',                     type=str,   help='')

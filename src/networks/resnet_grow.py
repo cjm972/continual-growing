@@ -107,9 +107,14 @@ class BayesianResNet(nn.Module):
         self.layer4 = self._make_layer(block, 256, layers[3], stride=2)
 
         # self.fc = None
+        self.cl_mode = getattr(args, 'cl_mode', 'task-incremental')
         self.classifier = torch.nn.ModuleList()
-        for t, n in self.taskcla:
-            self.classifier.append(BayesianLinear(self.num_ftrs, n, args))
+        if self.cl_mode == 'domain-incremental':
+            out_dim = max([n for _, n in self.taskcla])
+            self.classifier.append(BayesianLinear(self.num_ftrs, out_dim, args))
+        else:
+            for t, n in self.taskcla:
+                self.classifier.append(BayesianLinear(self.num_ftrs, n, args))
 
 
     def _make_layer(self, block, planes, blocks, stride=1):
@@ -150,8 +155,13 @@ class BayesianResNet(nn.Module):
         x = x.view(x.size(0), -1)
 
         y = []
-        for t, i in self.taskcla:
-            y.append(self.classifier[t](x, sample))
+        if getattr(self, 'cl_mode', 'task-incremental') == 'domain-incremental':
+            out = self.classifier[0](x, sample)
+            for t, i in self.taskcla:
+                y.append(out)
+        else:
+            for t, i in self.taskcla:
+                y.append(self.classifier[t](x, sample))
         return [F.log_softmax(yy, dim=1) for yy in y]
 
 

@@ -341,8 +341,12 @@ class Trainer(object):
             lp += m.log_prior
             lvp += m.log_variational_posterior
 
-        lp += self.model.classifier[t].log_prior
-        lvp += self.model.classifier[t].log_variational_posterior
+        if getattr(self.model, 'cl_mode', 'task-incremental') == 'domain-incremental':
+            lp += self.model.classifier[0].log_prior
+            lvp += self.model.classifier[0].log_variational_posterior
+        else:
+            lp += self.model.classifier[t].log_prior
+            lvp += self.model.classifier[t].log_variational_posterior
 
         return lp, lvp
 

@@ -23,9 +23,15 @@ class BayesianMLP(torch.nn.Module):
         if layers==2:
             self.fc2 = BayesianLinear(dim, dim, args)
 
+        self.args = args
+        self.cl_mode = getattr(args, 'cl_mode', 'task-incremental')
         self.classifier = torch.nn.ModuleList()
-        for t,n in self.taskcla:
-            self.classifier.append(BayesianLinear(dim, n, args))
+        if self.cl_mode == 'domain-incremental':
+            out_dim = max([n for _, n in self.taskcla])
+            self.classifier.append(BayesianLinear(dim, out_dim, args))
+        else:
+            for t,n in self.taskcla:
+                self.classifier.append(BayesianLinear(dim, n, args))
 
 
     def prune(self,mask_modules):
@@ -37,8 +43,13 @@ class BayesianMLP(torch.nn.Module):
         x = x.view(x.size(0),-1)
         x = torch.nn.functional.relu(self.fc1(x, sample))
         y=[]
-        for t,i in self.taskcla:
-            y.append(self.classifier[t](x, sample))
+        if getattr(self, 'cl_mode', 'task-incremental') == 'domain-incremental':
+            out = self.classifier[0](x, sample)
+            for t,i in self.taskcla:
+                y.append(out)
+        else:
+            for t,i in self.taskcla:
+                y.append(self.classifier[t](x, sample))
         return [torch.nn.functional.log_softmax(yy, dim=1) for yy in y]
 
 
