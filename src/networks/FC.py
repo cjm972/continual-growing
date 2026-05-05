@@ -28,7 +28,7 @@ class BayesianLinear(nn.Module):
         # rho initialization
         rho_base = self._get_init_rho((out_features, in_features), args)
         self.weight_rho = nn.Parameter(rho_base + torch.empty((out_features, in_features),
-                                      device=self.device, dtype=torch.float32).normal_(0.0, 1.0),requires_grad=True)
+                                      device=self.device, dtype=torch.float32).normal_(0., 0.1),requires_grad=True)
         
         self.weight = VariationalPosterior(self.weight_mu, self.weight_rho, self.device)
 
@@ -85,7 +85,7 @@ class BayesianLinear(nn.Module):
         device = self.device
 
         # New weight rows
-        new_w_mu = torch.empty((n_new, self.in_features), device=device, dtype=torch.float32).normal_(0., 0.1)
+        new_w_mu = torch.zeros((n_new, self.in_features), device=device, dtype=torch.float32)
         new_w_rho_base = self._get_init_rho((n_new, self.in_features), self.args)
         new_w_rho = new_w_rho_base + torch.empty((n_new, self.in_features), device=device, dtype=torch.float32).normal_(0., 0.1)
 
@@ -97,7 +97,7 @@ class BayesianLinear(nn.Module):
         self.weight_mask_new = torch.cat([self.weight_mask_new, new_weight_mask], dim=0)
 
         if self.use_bias:
-            new_b_mu = torch.empty((n_new,), device=device, dtype=torch.float32).normal_(0., 0.1)
+            new_b_mu = torch.zeros((n_new,), device=device, dtype=torch.float32)
             new_b_rho_base = self._get_init_rho((n_new,), self.args)
             new_b_rho = new_b_rho_base + torch.empty((n_new,), device=device, dtype=torch.float32).normal_(0., 0.1)
 
@@ -117,7 +117,7 @@ class BayesianLinear(nn.Module):
         device = self.device
 
         # New weight columns
-        new_w_mu = torch.empty((self.out_features, n_new), device=device, dtype=torch.float32).normal_(0., 0.1)
+        new_w_mu = torch.zeros((self.out_features, n_new), device=device, dtype=torch.float32)
         new_w_rho_base = self._get_init_rho((self.out_features, n_new), self.args)
         new_w_rho = new_w_rho_base + torch.empty((self.out_features, n_new), device=device, dtype=torch.float32).normal_(0., 0.1)
 

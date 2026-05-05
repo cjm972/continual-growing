@@ -30,7 +30,7 @@ parser.add_argument('--hidden_n',            default=16,           type=int, hel
 parser.add_argument('--parameter',          default='',             type=str,   help='')
 
 # Bayesian hyper-parameters
-parser.add_argument('--samples',            default=10,           type=int,     help='Number of Monte Carlo samples')
+parser.add_argument('--samples',            default=5,           type=int,     help='Number of Monte Carlo samples')
 parser.add_argument('--sigma_init',         default=0.1,       type=float,   help='Initial standard deviation (posterior)')
 parser.add_argument('--sigma_prior1',       default=1.0,            type=float,   help='Stdev for the 1st prior pdf in scaled mixture Gaussian')
 parser.add_argument('--sigma_prior2',       default=0.00001,       type=float,   help='Stdev for the 2nd prior pdf in scaled mixture Gaussian')

@@ -1,0 +1,67 @@
+Starting this run on :
+2026-05-05 13:54
+Load data...
+Input size = [1, 28, 28]
+Task info = [(0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10)]
+Inits...
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+****************************************************************************************************
+Task  0 (pmnist-0)
+****************************************************************************************************
+  [grow] fc1: 16 -> 21 units
+
+  [lr-check] task=0 epoch=0 (update_lr arg=0)
+    group 0: scalar lr=0.01
+    group 1: scalar lr=0.01
+Training epoch: 100%|████████████████████████████████████████████████████████████████| 938/938 [00:39<00:00, 23.50it/s]
+| Epoch   1, time= 42.7ms/ 11.1ms | Train: loss=0.000, acc= 86.7% | Valid: loss=0.000, acc= 86.7% | *
+Training epoch: 100%|████████████████████████████████████████████████████████████████| 938/938 [00:38<00:00, 24.31it/s]
+| Epoch   2, time= 41.2ms/ 11.3ms | Train: loss=0.000, acc= 89.8% | Valid: loss=0.000, acc= 89.8% | *
+
+  [lr-check] task=0 epoch=2 (update_lr arg=2)
+    group 0: Tensor lr shape=[21, 784], unique=12542/16464, min=1.216680e-05, max=7.378655e-02
+    group 1: Tensor lr shape=[21], unique=17/21, min=8.447026e-04, max=1.000000e-02
+    group 2: scalar lr=0.01
+    group 3: scalar lr=0.01
+Training epoch: 100%|████████████████████████████████████████████████████████████████| 938/938 [00:40<00:00, 23.35it/s]
+| Epoch   3, time= 42.9ms/ 11.0ms | Train: loss=0.000, acc= 89.6% | Valid: loss=0.000, acc= 89.6% | *
+Training epoch: 100%|████████████████████████████████████████████████████████████████| 938/938 [00:40<00:00, 23.30it/s]
+| Epoch   4, time= 42.9ms/ 11.1ms | Train: loss=0.000, acc= 90.4% | Valid: loss=0.000, acc= 90.4% | *
+Training epoch: 100%|████████████████████████████████████████████████████████████████| 938/938 [00:42<00:00, 22.15it/s]
+| Epoch   5, time= 45.2ms/ 12.7ms | Train: loss=0.000, acc= 90.4% | Valid: loss=0.000, acc= 90.4% | *
+
+  [lr-check] task=0 epoch=5 (update_lr arg=5)
+    group 0: Tensor lr shape=[21, 784], unique=12542/16464, min=2.224168e-10, max=1.779012e-01
+    group 1: Tensor lr shape=[21], unique=17/21, min=8.446471e-04, max=1.000000e-02
+    group 2: scalar lr=0.01
+    group 3: scalar lr=0.01
+Training epoch:  49%|███████████████████████████████▎                                | 459/938 [00:20<00:21, 22.47it/s]
+
+----------------------------------------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cmetzner/lalaland/continual_growing/src/run.py", line 178, in <module>
+    test_loss,test_acc=trainer.eval(u,xtest,ytest,debug=True)
+                       ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cmetzner/lalaland/continual_growing/src/train/trainer.py", line 498, in eval
+    loss = self.elbo_loss(images, targets, t, num_batches,sample=False,debug=debug)
+  File "/Users/cmetzner/lalaland/continual_growing/src/train/trainer.py", line 537, in elbo_loss
+    pred = self.model(input,sample=False)[t]
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cmetzner/miniconda3/envs/continual_growing/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/cmetzner/miniconda3/envs/continual_growing/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/Users/cmetzner/lalaland/continual_growing/src/networks/mlp_grow.py", line 47, in forward
+    out = self.classifier[0](x, sample)
+  File "/Users/cmetzner/miniconda3/envs/continual_growing/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/cmetzner/miniconda3/envs/continual_growing/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/Users/cmetzner/lalaland/continual_growing/src/networks/FC.py", line 182, in forward
+    self.log_prior = torch.tensor(0.0, device=self.device)
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt
