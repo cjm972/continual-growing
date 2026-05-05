@@ -1,0 +1,133 @@
+Starting this run on :
+2026-05-05 18:53
+Load data...
+Input size = [1, 28, 28]
+Task info = [(0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10)]
+Inits...
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+****************************************************************************************************
+Task  0 (pmnist-0)
+****************************************************************************************************
+  [grow] fc1: 16 -> 21 units
+
+  [lr-check] task=0 epoch=0 (update_lr arg=0)
+    group 0: scalar lr=0.01
+    group 1: scalar lr=0.01
+Training epoch: 100%|████████████████████████████████████████████████████████████████| 938/938 [00:23<00:00, 40.41it/s]
+| Epoch   1, time= 24.8ms/  6.2ms | Train: loss=0.000, acc= 79.1% | Valid: loss=0.000, acc= 79.1% | *
+Training epoch: 100%|████████████████████████████████████████████████████████████████| 938/938 [00:21<00:00, 43.80it/s]
+| Epoch   2, time= 22.9ms/  6.2ms | Train: loss=0.000, acc= 83.3% | Valid: loss=0.000, acc= 83.3% | *
+
+  [lr-check] task=0 epoch=2 (update_lr arg=2)
+    group 0: Tensor lr shape=[21, 784], unique=12538/16464, min=1.211039e-05, max=7.384533e-02
+    group 1: Tensor lr shape=[21], unique=17/21, min=8.441915e-04, max=1.000000e-02
+    group 2: scalar lr=0.01
+    group 3: scalar lr=0.01
+Training epoch: 100%|████████████████████████████████████████████████████████████████| 938/938 [00:21<00:00, 44.04it/s]
+| Epoch   3, time= 22.8ms/  6.2ms | Train: loss=0.000, acc= 82.4% | Valid: loss=0.000, acc= 82.4% | *
+Training epoch: 100%|████████████████████████████████████████████████████████████████| 938/938 [00:22<00:00, 42.24it/s]
+| Epoch   4, time= 23.7ms/  6.3ms | Train: loss=0.000, acc= 83.8% | Valid: loss=0.000, acc= 83.8% | *
+Training epoch: 100%|████████████████████████████████████████████████████████████████| 938/938 [00:21<00:00, 44.26it/s]
+| Epoch   5, time= 22.6ms/  6.3ms | Train: loss=0.000, acc= 83.8% | Valid: loss=0.000, acc= 83.8% | *
+
+  [lr-check] task=0 epoch=5 (update_lr arg=5)
+    group 0: Tensor lr shape=[21, 784], unique=12538/16464, min=2.261828e-10, max=1.779265e-01
+    group 1: Tensor lr shape=[21], unique=17/21, min=8.447064e-04, max=1.000000e-02
+    group 2: scalar lr=0.01
+    group 3: scalar lr=0.01
+Training epoch: 100%|████████████████████████████████████████████████████████████████| 938/938 [00:21<00:00, 44.02it/s]
+| Epoch   6, time= 22.7ms/  6.2ms | Train: loss=0.000, acc= 84.0% | Valid: loss=0.000, acc= 84.0% | *
+Training epoch: 100%|████████████████████████████████████████████████████████████████| 938/938 [00:21<00:00, 44.51it/s]
+| Epoch   7, time= 22.5ms/  6.2ms | Train: loss=0.000, acc= 83.9% | Valid: loss=0.000, acc= 83.9% | *
+Training epoch: 100%|████████████████████████████████████████████████████████████████| 938/938 [00:22<00:00, 41.90it/s]
+| Epoch   8, time= 23.9ms/  6.2ms | Train: loss=0.000, acc= 83.9% | Valid: loss=0.000, acc= 83.9% | *
+
+  [lr-check] task=0 epoch=8 (update_lr arg=8)
+    group 0: Tensor lr shape=[21, 784], unique=12544/16464, min=4.193060e-15, max=2.820332e-01
+    group 1: Tensor lr shape=[21], unique=17/21, min=8.457997e-04, max=1.000000e-02
+    group 2: scalar lr=0.01
+    group 3: scalar lr=0.01
+Training epoch: 100%|████████████████████████████████████████████████████████████████| 938/938 [00:21<00:00, 44.09it/s]
+| Epoch   9, time= 22.7ms/  6.2ms | Train: loss=0.000, acc= 84.1% | Valid: loss=0.000, acc= 84.1% |
+Training epoch: 100%|████████████████████████████████████████████████████████████████| 938/938 [00:21<00:00, 44.42it/s]
+| Epoch  10, time= 22.5ms/  6.2ms | Train: loss=0.000, acc= 83.9% | Valid: loss=0.000, acc= 83.9% | *
+----------------------------------------------------------------------------------------------------
+>>> Test on task  0 - pmnist-0       : loss=0.000, acc=83.480% <<<
+Save at ../checkpoints/pmnist_grow
+****************************************************************************************************
+Task  1 (pmnist-1)
+****************************************************************************************************
+
+  [lr-check] task=1 epoch=0 (update_lr arg=10)
+    group 0: Tensor lr shape=[21, 784], unique=16447/16464, min=2.896742e-18, max=3.514399e-01
+    group 1: Tensor lr shape=[21], unique=21/21, min=7.802824e-04, max=1.157781e-03
+    group 2: scalar lr=0.01
+    group 3: scalar lr=0.01
+Training epoch: 100%|████████████████████████████████████████████████████████████████| 938/938 [00:22<00:00, 41.63it/s]
+| Epoch   1, time= 24.1ms/  6.1ms | Train: loss=0.000, acc= 70.8% | Valid: loss=0.000, acc= 70.8% | *
+Training epoch: 100%|████████████████████████████████████████████████████████████████| 938/938 [00:21<00:00, 43.79it/s]
+| Epoch   2, time= 22.9ms/  6.3ms | Train: loss=0.000, acc= 73.7% | Valid: loss=0.000, acc= 73.7% | *
+
+  [lr-check] task=1 epoch=2 (update_lr arg=12)
+    group 0: Tensor lr shape=[21, 784], unique=16447/16464, min=5.880883e-22, max=4.202980e-01
+    group 1: Tensor lr shape=[21], unique=21/21, min=7.633625e-04, max=1.143999e-03
+    group 2: scalar lr=0.01
+    group 3: scalar lr=0.01
+Training epoch: 100%|████████████████████████████████████████████████████████████████| 938/938 [00:21<00:00, 43.72it/s]
+| Epoch   3, time= 22.9ms/  6.2ms | Train: loss=0.000, acc= 77.7% | Valid: loss=0.000, acc= 77.7% | *
+Training epoch: 100%|████████████████████████████████████████████████████████████████| 938/938 [00:21<00:00, 43.68it/s]
+| Epoch   4, time= 22.9ms/  6.2ms | Train: loss=0.000, acc= 79.2% | Valid: loss=0.000, acc= 79.2% | *
+Training epoch: 100%|████████████████████████████████████████████████████████████████| 938/938 [00:21<00:00, 43.28it/s]
+| Epoch   5, time= 23.1ms/  6.2ms | Train: loss=0.000, acc= 78.9% | Valid: loss=0.000, acc= 78.9% | *
+
+  [lr-check] task=1 epoch=5 (update_lr arg=15)
+    group 0: Tensor lr shape=[21, 784], unique=16449/16464, min=4.111714e-27, max=5.241601e-01
+    group 1: Tensor lr shape=[21], unique=21/21, min=7.590373e-04, max=1.135059e-03
+    group 2: scalar lr=0.01
+    group 3: scalar lr=0.01
+Training epoch: 100%|████████████████████████████████████████████████████████████████| 938/938 [00:21<00:00, 44.02it/s]
+| Epoch   6, time= 22.7ms/  6.2ms | Train: loss=0.000, acc= 79.7% | Valid: loss=0.000, acc= 79.7% | *
+  [grow] fc1: 21 -> 26 units
+Training epoch: 100%|████████████████████████████████████████████████████████████████| 938/938 [00:21<00:00, 43.14it/s]
+| Epoch   7, time= 23.2ms/  6.2ms | Train: loss=0.000, acc= 72.5% | Valid: loss=0.000, acc= 72.5% |
+Training epoch: 100%|████████████████████████████████████████████████████████████████| 938/938 [00:22<00:00, 42.31it/s]
+| Epoch   8, time= 23.7ms/  6.1ms | Train: loss=0.000, acc= 75.1% | Valid: loss=0.000, acc= 75.1% |
+
+  [lr-check] task=1 epoch=8 (update_lr arg=18)
+    group 0: Tensor lr shape=[26, 784], unique=16447/20384, min=8.551774e-29, max=5.509577e-01
+    group 1: Tensor lr shape=[26], unique=22/26, min=7.612533e-04, max=1.000000e-02
+    group 2: scalar lr=0.01
+    group 3: scalar lr=0.01
+Training epoch: 100%|████████████████████████████████████████████████████████████████| 938/938 [00:21<00:00, 43.86it/s]
+| Epoch   9, time= 22.8ms/  6.0ms | Train: loss=0.000, acc= 77.0% | Valid: loss=0.000, acc= 77.0% |
+Training epoch: 100%|████████████████████████████████████████████████████████████████| 938/938 [00:21<00:00, 43.69it/s]
+| Epoch  10, time= 22.9ms/  6.2ms | Train: loss=0.000, acc= 77.9% | Valid: loss=0.000, acc= 77.9% |
+Traceback (most recent call last):
+  File "/Users/cmetzner/lalaland/continual_growing/src/run.py", line 174, in <module>
+    trainer.train(task,xtrain,ytrain,xvalid,yvalid)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cmetzner/lalaland/continual_growing/src/train/trainer.py", line 136, in train
+    self.model.load_state_dict(copy.deepcopy(best_model))
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cmetzner/miniconda3/envs/continual_growing/lib/python3.14/site-packages/torch/nn/modules/module.py", line 2639, in load_state_dict
+    raise RuntimeError(
+    ...<3 lines>...
+    )
+RuntimeError: Error(s) in loading state_dict for BayesianMLP:
+	size mismatch for fc1.weight_mu: copying a param with shape torch.Size([21, 784]) from checkpoint, the shape in current model is torch.Size([26, 784]).
+	size mismatch for fc1.weight_rho: copying a param with shape torch.Size([21, 784]) from checkpoint, the shape in current model is torch.Size([26, 784]).
+	size mismatch for fc1.bias_mu: copying a param with shape torch.Size([21]) from checkpoint, the shape in current model is torch.Size([26]).
+	size mismatch for fc1.bias_rho: copying a param with shape torch.Size([21]) from checkpoint, the shape in current model is torch.Size([26]).
+	size mismatch for fc1.weight_mask_new: copying a param with shape torch.Size([21, 784]) from checkpoint, the shape in current model is torch.Size([26, 784]).
+	size mismatch for fc1.bias_mask_new: copying a param with shape torch.Size([21]) from checkpoint, the shape in current model is torch.Size([26]).
+	size mismatch for fc1.weight.mu: copying a param with shape torch.Size([21, 784]) from checkpoint, the shape in current model is torch.Size([26, 784]).
+	size mismatch for fc1.weight.rho: copying a param with shape torch.Size([21, 784]) from checkpoint, the shape in current model is torch.Size([26, 784]).
+	size mismatch for fc1.bias.mu: copying a param with shape torch.Size([21]) from checkpoint, the shape in current model is torch.Size([26]).
+	size mismatch for fc1.bias.rho: copying a param with shape torch.Size([21]) from checkpoint, the shape in current model is torch.Size([26]).
+	size mismatch for classifier.0.weight_mu: copying a param with shape torch.Size([10, 21]) from checkpoint, the shape in current model is torch.Size([10, 26]).
+	size mismatch for classifier.0.weight_rho: copying a param with shape torch.Size([10, 21]) from checkpoint, the shape in current model is torch.Size([10, 26]).
+	size mismatch for classifier.0.weight_mask_new: copying a param with shape torch.Size([10, 21]) from checkpoint, the shape in current model is torch.Size([10, 26]).
+	size mismatch for classifier.0.weight.mu: copying a param with shape torch.Size([10, 21]) from checkpoint, the shape in current model is torch.Size([10, 26]).
+	size mismatch for classifier.0.weight.rho: copying a param with shape torch.Size([10, 21]) from checkpoint, the shape in current model is torch.Size([10, 26]).

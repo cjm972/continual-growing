@@ -1,0 +1,50 @@
+Starting this run on :
+2026-05-05 22:43
+Load data...
+Input size = [1, 28, 28]
+Task info = [(0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10)]
+Inits...
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+****************************************************************************************************
+Task  0 (pmnist-0)
+****************************************************************************************************
+
+  [lr-check] task=0 epoch=0 (update_lr arg=0)
+    group 0: scalar lr=0.01
+    group 1: scalar lr=0.01
+Training epoch: 100%|████████████████████████████████████████████████████████████████| 938/938 [00:40<00:00, 22.91it/s]
+| Epoch   1, time= 43.7ms/ 11.3ms | Train: loss=0.000, acc= 80.1% | Valid: loss=0.000, acc= 80.1% | *
+  [grow] fc1: 16 -> 21 units
+Training epoch: 100%|████████████████████████████████████████████████████████████████| 938/938 [00:41<00:00, 22.36it/s]
+| Epoch   2, time= 44.8ms/ 11.2ms | Train: loss=0.000, acc= 81.7% | Valid: loss=0.000, acc= 81.7% | *
+
+  [lr-check] task=0 epoch=2 (update_lr arg=2)
+    group 0: Tensor lr shape=[21, 784], unique=12534/16464, min=2.494441e-05, max=4.042969e-02
+    group 1: Tensor lr shape=[21], unique=17/21, min=8.407991e-04, max=1.000000e-02
+    group 2: scalar lr=0.01
+    group 3: scalar lr=0.01
+Training epoch:  14%|█████████                                                       | 133/938 [00:05<00:35, 22.46it/s]
+
+----------------------------------------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cmetzner/lalaland/continual_growing/src/run.py", line 201, in <module>
+    test_loss,test_acc=trainer.eval(u,xtest,ytest,debug=True)
+                       ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cmetzner/lalaland/continual_growing/src/train/trainer.py", line 502, in eval
+    loss = self.elbo_loss(images, targets, t, num_batches,sample=False,debug=debug)
+  File "/Users/cmetzner/lalaland/continual_growing/src/train/trainer.py", line 541, in elbo_loss
+    pred = self.model(input,sample=False)[t]
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cmetzner/miniconda3/envs/continual_growing/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/cmetzner/miniconda3/envs/continual_growing/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/Users/cmetzner/lalaland/continual_growing/src/networks/mlp_grow.py", line 83, in forward
+    return [torch.nn.functional.log_softmax(yy, dim=1) for yy in y]
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "/Users/cmetzner/miniconda3/envs/continual_growing/lib/python3.14/site-packages/torch/nn/functional.py", line 2267, in log_softmax
+    ret = input.log_softmax(dim)
+KeyboardInterrupt

@@ -12,7 +12,7 @@ import wandb
 
 class Trainer(object):
 
-    def __init__(self,model,args,lr_min=1e-6,lr_factor=0,lr_patience=5,clipgrad=1000):
+    def __init__(self,model,args,lr_min=1e-6,lr_factor=1.0,lr_patience=5,clipgrad=1000):
         self.model=model
         self.device = args.device
         self.lr_min=lr_min
@@ -68,7 +68,11 @@ class Trainer(object):
                 # Train
                 clock0=time.time()
                 # grow network size and update parameters at every epoch!
-                self.grow(global_e) # if want static version, can just set this to 0
+                old_num_params = sum(p.numel() for p in self.model.parameters())
+                self.grow(global_e)
+                if sum(p.numel() for p in self.model.parameters()) != old_num_params:
+                    # Architecture grew; update best_model to avoid shape mismatch during load_state_dict
+                    best_model = copy.deepcopy(self.model.state_dict())
                 params_dict = self.update_lr(global_e)
                 self.optimizer = BayesianSGD(params=params_dict)
 
@@ -225,7 +229,7 @@ class Trainer(object):
         (next hidden + all classifier heads) to accept the wider input.
         Returns a fresh params_dict reflecting the new parameters."""
 
-        if self.growth_rate == 0:
+        if self.growth_rate == 0 or t==0:
             return self.model
 
         # Collect hidden layers in order (everything that is a BayesianLinear but not a classifier)

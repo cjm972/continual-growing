@@ -30,7 +30,7 @@ parser.add_argument('--hidden_n',            default=16,           type=int, hel
 parser.add_argument('--parameter',          default='',             type=str,   help='')
 
 # Bayesian hyper-parameters
-parser.add_argument('--samples',            default=5,           type=int,     help='Number of Monte Carlo samples')
+parser.add_argument('--samples',            default=10,           type=int,     help='Number of Monte Carlo samples')
 parser.add_argument('--sigma_init',         default=0.1,       type=float,   help='Initial standard deviation (posterior)')
 parser.add_argument('--sigma_prior1',       default=1.0,            type=float,   help='Stdev for the 1st prior pdf in scaled mixture Gaussian')
 parser.add_argument('--sigma_prior2',       default=0.00001,       type=float,   help='Stdev for the 2nd prior pdf in scaled mixture Gaussian')
@@ -44,6 +44,9 @@ parser.add_argument('--static',            action='store_true',    help='Use onl
 parser.add_argument('--growth_rate',        default=5,              type=int,     help='Number of neurons to add per growth step (0 to disable)')
 parser.add_argument('--growth_saturation',  default=0.2,            type=float,   help='Fraction of new parameters that must be saturated to grow')
 parser.add_argument('--growth_threshold',   default=0.05,           type=float,   help='Stdev threshold below which a parameter is considered saturated')
+parser.add_argument('--successive_inhibition', action='store_true', help='Enable asymmetric successive lateral inhibition')
+parser.add_argument('--inhibition_samples', default=5,              type=int,     help='Number of samples to estimate pre-activation variance for inhibition')
+parser.add_argument('--gamma_inhibition',    default=0.5,            type=float,   help='Scaling factor for inhibition strength')
 
 parser.add_argument('--resume',          default='no',            type=str,   help='resume?')
 parser.add_argument('--sti',             default=0,               type=int,   help='starting task?')
@@ -115,6 +118,25 @@ args.inputsize, args.taskcla = inputsize, taskcla
 
 # Inits
 print('Inits...')
+resumed_checkpoint = None
+if args.resume == 'yes':
+    checkpoint_path = os.path.join(args.checkpoint, 'model_{}.pth.tar'.format(args.sti))
+    if os.path.exists(checkpoint_path):
+        print(f'Peeking at checkpoint {checkpoint_path} to adjust architecture...')
+        resumed_checkpoint = torch.load(checkpoint_path, map_location='cpu')
+        
+        # Adjust architecture based on checkpoint for growing models
+        if args.train_mode == 'grow' and 'model_state_dict' in resumed_checkpoint:
+            sd = resumed_checkpoint['model_state_dict']
+            if 'fc1.weight_mu' in sd:
+                new_hidden = sd['fc1.weight_mu'].shape[0]
+                if new_hidden != args.hidden_n:
+                    print(f'  [resume] Detected hidden_n={new_hidden} in checkpoint (current args={args.hidden_n}). Overriding.')
+                    args.hidden_n = new_hidden
+    else:
+        print(f'WARNING: Checkpoint {checkpoint_path} not found. Starting from scratch.')
+        args.resume = 'no'
+
 model=network.Net(args).to(args.device)
 wandb.watch(model)
 
@@ -122,13 +144,14 @@ print('-'*100)
 trainer=trainer_module.Trainer(model,args=args)
 print('-'*100)
 
-# args.output=os.path.join(args.results_path, datetime.now().strftime("%d-%m-%Y-%H-%M-%S"))
 print('-'*100)
 
-if args.resume == 'yes':
-    checkpoint = torch.load(os.path.join(args.checkpoint, 'model_{}.pth.tar'.format(args.sti)))
-    model.load_state_dict(checkpoint['model_state_dict'])
+if args.resume == 'yes' and resumed_checkpoint is not None:
+    print(f'Loading state_dict from task {args.sti}...')
+    model.load_state_dict(resumed_checkpoint['model_state_dict'])
     model = model.to(device=args.device)
+    # Clear memory
+    del resumed_checkpoint
 else:
     args.sti = 0
 
