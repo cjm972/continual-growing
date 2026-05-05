@@ -56,6 +56,13 @@ artifacts under `hpo_runs/<study_name>/`:
 - `trials.csv` — rolling `trial_number, state, value(s), params...`
 - `best.yaml` — concrete config for the best trial (re-runnable as `--config`)
 - `pareto.csv` + `best_<metric>.yaml` — for multi-objective studies
+- `pareto/trial-<n>/` — multi-objective only, one dir per Pareto-front
+  trial: `config.yaml` (re-runnable), `metrics.json`, plus CL plots
+  (`cl_acc_matrix.png`, `cl_per_task_curve.png`) for deeper analysis
+- `plots/` — Optuna's classical visualisations (history, importances,
+  parallel coords, slice, contour, intermediates for single-obj;
+  Pareto front + per-objective importances/parallel coords for
+  multi-obj) plus the best-trial CL plots in single-obj studies
 - `trials/<n>/...` — only when `hpo.save_trial_artifacts: true`. Contains
   `params.yaml`, `metrics.json`, the per-task `.txt` accuracy matrix, and
   the final `<exp>_<mode>_seed_<seed>.p` pickle. Default is off — trial

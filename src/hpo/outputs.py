@@ -144,6 +144,42 @@ def reduce_pareto_with_tie_break(
     return max(pareto, key=lambda t: t.values[int(metric_idx)])
 
 
+def write_pareto_trial_dirs(
+    study_dir: Path,
+    study: Any,
+    base_dict: dict[str, Any],
+    metrics: Sequence[str],
+) -> None:
+    """For each trial on the Pareto front, write `pareto/trial-<n>/` with:
+      - `config.yaml` — concrete config, re-runnable as `--config`
+      - `metrics.json` — values + params
+      - CL plots from the trial's acc_matrix (when available)
+    """
+    import json
+    from hpo.plots import write_cl_plots_for_trial
+
+    pareto = study.best_trials
+    base = study_dir / "pareto"
+    base.mkdir(parents=True, exist_ok=True)
+    for t in pareto:
+        trial_dir = base / f"trial-{t.number}"
+        trial_dir.mkdir(parents=True, exist_ok=True)
+        config = _concrete_config_from_trial(base_dict, t.params or {})
+        config.pop("hpo", None)
+        (trial_dir / "config.yaml").write_text(yaml.safe_dump(config, sort_keys=False))
+        (trial_dir / "metrics.json").write_text(
+            json.dumps(
+                {"trial_number": t.number,
+                 "metrics": dict(zip(metrics, list(t.values or []))),
+                 "params": dict(t.params or {})},
+                indent=2,
+            )
+        )
+        write_cl_plots_for_trial(
+            t, trial_dir, label=f"pareto trial #{t.number}",
+        )
+
+
 def finalize_study_outputs(
     study_dir: Path,
     study: Any,
@@ -152,7 +188,10 @@ def finalize_study_outputs(
     metrics: list[str],
     tie_break: dict[str, Any] | None = None,
 ) -> None:
-    """Write experiment.yaml, search_space.yaml, trials.csv, best*.yaml."""
+    """Write experiment.yaml, search_space.yaml, trials.csv, best*.yaml,
+    plots/, and (multi-obj) pareto/trial-<n>/ dirs."""
+    from hpo.plots import make_study_plots
+
     write_experiment_yaml(study_dir, merged_dict)
     write_search_space_yaml(study_dir, search_space)
     write_trials_csv(study_dir, study, metrics)
@@ -160,12 +199,13 @@ def finalize_study_outputs(
     completed = [t for t in study.get_trials(deepcopy=False)
                  if t.values is not None]
     if not completed:
-        print("[outputs] no completed trials; skipping best/pareto writes")
+        print("[outputs] no completed trials; skipping best/pareto/plots")
         return
 
     if len(metrics) == 1:
         best = study.best_trial
         write_best_yaml(study_dir, merged_dict, best, name="best.yaml")
+        make_study_plots(study_dir, study, metrics)
         return
 
     # Multi-objective.
@@ -177,3 +217,5 @@ def finalize_study_outputs(
         chosen = reduce_pareto_with_tie_break(study, metrics, tie_break)
         if chosen is not None:
             write_best_yaml(study_dir, merged_dict, chosen, name="best.yaml")
+    write_pareto_trial_dirs(study_dir, study, merged_dict, metrics)
+    make_study_plots(study_dir, study, metrics)
