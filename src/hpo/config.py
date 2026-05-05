@@ -92,6 +92,11 @@ def _walk_leaves(
 
     Skips entries that are dicts (we recurse into them). Skips lists at any
     level — argparse dests don't take nested-list overrides.
+
+    Duplicate leaf names are allowed: the last one seen during the walk
+    wins. Walk order is preorder + dict-insertion-order (Python 3.7+),
+    which after `_deep_merge` corresponds to "configs read later, and
+    leaves written later in the file, override earlier ones".
     """
     if isinstance(node, dict):
         for k, v in node.items():
@@ -99,11 +104,6 @@ def _walk_leaves(
             if isinstance(v, dict):
                 _walk_leaves(v, child, out)
             else:
-                if k in out:
-                    raise ValueError(
-                        f"duplicate leaf key {k!r}: previously at "
-                        f"{out[k][0]!r}, now at {child!r}"
-                    )
                 out[k] = (child, v)
 
 

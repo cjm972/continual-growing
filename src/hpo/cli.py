@@ -38,48 +38,11 @@ def _ensure_cwd_is_src() -> None:
 
 
 def _build_base_parser() -> argparse.ArgumentParser:
-    """Mirror src/run.py's argparse — used to validate config keys and to
-    construct trial args. Imported via runpy-ish lazy load to avoid
-    triggering run.py's top-level execution."""
-    parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument('--seed', default=0, type=int)
-    parser.add_argument('--device', default='mps', type=str)
-    parser.add_argument('--wandb_mode', default='online', type=str,
-                        choices=['online', 'offline', 'disabled'])
-    parser.add_argument('--experiment', default='mnist5', type=str,
-                        choices=['mnist2', 'mnist5', 'pmnist', 'cifar', 'mixture'])
-    parser.add_argument('--train_mode', default='grow', type=str)
-    parser.add_argument('--data_path', default='../data/', type=str)
-    parser.add_argument('--cl_mode', default='domain-incremental', type=str,
-                        choices=['task-incremental', 'domain-incremental'])
-    parser.add_argument('--output', default='', type=str)
-    parser.add_argument('--checkpoint_dir', default='../checkpoints/', type=str)
-    parser.add_argument('--epochs', default=10, type=int)
-    parser.add_argument('--sbatch', default=64, type=int)
-    parser.add_argument('--lr_mu', default=0.01, type=float)
-    parser.add_argument('--lr_sigma', default=0.01, type=float)
-    parser.add_argument('--layers', default=1, type=int)
-    parser.add_argument('--hidden_n', default=16, type=int)
-    parser.add_argument('--parameter', default='', type=str)
-    parser.add_argument('--samples', default=10, type=int)
-    parser.add_argument('--sigma_init', default=0.1, type=float)
-    parser.add_argument('--sigma_prior1', default=1.0, type=float)
-    parser.add_argument('--sigma_prior2', default=0.00001, type=float)
-    parser.add_argument('--pi', default=0.25, type=float)
-    parser.add_argument('--rho_init_mode', default='gaussian', type=str,
-                        choices=['gaussian', 'bimodal'])
-    parser.add_argument('--regularization', default='sns', type=str,
-                        choices=['bbb', 'sns', 'unimodal'])
-    parser.add_argument('--arch', default='mlp', type=str)
-    parser.add_argument('--static', action='store_true')
-    parser.add_argument('--growth_rate', default=5, type=int)
-    parser.add_argument('--growth_saturation', default=0.2, type=float)
-    parser.add_argument('--growth_threshold', default=0.05, type=float)
-    parser.add_argument('--resume', default='no', type=str)
-    parser.add_argument('--sti', default=0, type=int)
-    parser.add_argument('--valid_split', default=0.0, type=float)
-    parser.add_argument('--config', default=[], nargs='+')
-    return parser
+    """Materialise the run.py parser, but with required-ness dropped: the
+    HPO runner builds trial args from the YAML config (no CLI parse), so
+    `required=True` flags would otherwise raise on parse_args([])."""
+    from params import build_parser
+    return build_parser(add_config=True, enforce_required=False)
 
 
 def main(argv: list[str] | None = None) -> int:

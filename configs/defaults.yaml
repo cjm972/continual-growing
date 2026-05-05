@@ -1,6 +1,8 @@
-# Concrete default values mirroring src/run.py argparse defaults.
-# Loaded by `--config` (lowest precedence). Edit values to globally retune
-# without touching argparse. Per-run overrides go in additional configs.
+# AUTO-GENERATED from src/params.py via params_to_dict(). Concrete defaults
+# mirroring src/run.py argparse defaults. Loaded by --config (lowest
+# precedence). To change a default, edit src/params.py and regenerate
+# this file: python -c 'import yaml; from params import params_to_dict;
+# print(yaml.safe_dump(params_to_dict(), sort_keys=False))'
 seed: 0
 device: mps
 wandb_mode: online
@@ -8,7 +10,6 @@ experiment: mnist5
 train_mode: grow
 data_path: ../data/
 cl_mode: domain-incremental
-
 output: ''
 checkpoint_dir: ../checkpoints/
 epochs: 10
@@ -18,23 +19,18 @@ lr_sigma: 0.01
 layers: 1
 hidden_n: 16
 parameter: ''
-
-# Bayesian
 samples: 10
 sigma_init: 0.1
 sigma_prior1: 1.0
-sigma_prior2: 0.00001
+sigma_prior2: 1.0e-05
 pi: 0.25
 rho_init_mode: gaussian
 regularization: sns
 arch: mlp
 static: false
-
-# Growth
 growth_rate: 5
 growth_saturation: 0.2
 growth_threshold: 0.05
-
 resume: 'no'
 sti: 0
 valid_split: 0.0
