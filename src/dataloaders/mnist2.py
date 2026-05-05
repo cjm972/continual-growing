@@ -5,7 +5,7 @@ from torchvision import datasets,transforms
 
 ########################################################################################################################
 
-def get(data_path,seed,fixed_order=False,pc_valid=0):
+def get(data_path,seed,fixed_order=False,pc_valid=0,valid_split=0.0):
     data={}
     taskcla=[]
     size=[1,28,28]
@@ -46,10 +46,22 @@ def get(data_path,seed,fixed_order=False,pc_valid=0):
             data[n][s]['y']=torch.LongTensor(np.array(data[n][s]['y'],dtype=int)).view(-1)
 
     # Validation
+    rng = np.random.RandomState(seed)
     for t in data.keys():
         data[t]['valid']={}
-        data[t]['valid']['x']=data[t]['train']['x'].clone()
-        data[t]['valid']['y']=data[t]['train']['y'].clone()
+        if valid_split > 0:
+            n = data[t]['train']['x'].size(0)
+            perm = rng.permutation(n)
+            nvalid = int(round(valid_split * n))
+            ivalid = torch.LongTensor(perm[:nvalid])
+            itrain = torch.LongTensor(perm[nvalid:])
+            data[t]['valid']['x']=data[t]['train']['x'][ivalid].clone()
+            data[t]['valid']['y']=data[t]['train']['y'][ivalid].clone()
+            data[t]['train']['x']=data[t]['train']['x'][itrain].clone()
+            data[t]['train']['y']=data[t]['train']['y'][itrain].clone()
+        else:
+            data[t]['valid']['x']=data[t]['train']['x'].clone()
+            data[t]['valid']['y']=data[t]['train']['y'].clone()
 
     # Others
     n=0

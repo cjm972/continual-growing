@@ -1,0 +1,27 @@
+# Tiny smoke-test config: 3 trials, 1 epoch, 2-dim search space.
+experiment: mnist5
+train_mode: grow
+device: cuda
+wandb_mode: disabled
+
+epochs: 1
+hidden_n: 8
+growth_rate: 0
+sbatch: 64
+samples: 3
+
+lr_mu: !hpo:loguniform 1.0e-3, 1.0e-1
+pi:    !hpo:float      0.1, 0.4
+
+hpo:
+  n_trials: 3
+  sampler: random
+  pruner: nop
+  master_seed: 0
+  metrics: [avg_acc]
+  valid_split: 0.1
+  n_seeds: 1
+  aggregate: mean
+  save_checkpoints: false
+  wandb_per_trial: false
+  study_name: smoke_test

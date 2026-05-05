@@ -1,0 +1,23 @@
+# Plain-run override: mnist5 with growing Bayesian MLP.
+# Keys mirror argparse dests in src/run.py. The loader requires every leaf
+# name to be unique in the merged tree, so layer YAMLs must use a
+# consistent layout (here: flat).
+experiment: mnist5
+train_mode: grow
+arch: mlp
+epochs: 10
+
+lr_mu: 0.01
+lr_sigma: 0.01
+sbatch: 64
+hidden_n: 16
+layers: 1
+
+samples: 10
+sigma_init: 0.1
+pi: 0.25
+regularization: sns
+
+growth_rate: 5
+growth_saturation: 0.2
+growth_threshold: 0.05

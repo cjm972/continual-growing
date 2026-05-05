@@ -12,7 +12,9 @@ import utils
 
 ########################################################################################################################
 
-def get(data_path,seed=0,pc_valid=0.15, fixed_order=True):
+def get(data_path,seed=0,pc_valid=0.15, fixed_order=True, valid_split=0.0):
+    # valid_split overrides pc_valid when > 0; preserves legacy 15% holdout otherwise.
+    pc = valid_split if valid_split > 0 else pc_valid
     data={}
     taskcla=[]
     size=[3,32,32]
@@ -227,7 +229,7 @@ def get(data_path,seed=0,pc_valid=0.15, fixed_order=True):
     for t in data.keys():
         r=np.arange(data[t]['train']['x'].size(0))
         r=np.array(shuffle(r,random_state=seed),dtype=int)
-        nvalid=int(pc_valid*len(r))
+        nvalid=int(pc*len(r))
         ivalid=torch.LongTensor(r[:nvalid])
         itrain=torch.LongTensor(r[nvalid:])
         data[t]['valid']={}

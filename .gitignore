@@ -1,1 +1,28 @@
 data/*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# venv
+.venv/
+venv/
+
+# build / install
+build/
+dist/
+
+# Local artifacts
+checkpoints/
+hpo_runs/
+wandb/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+
+# Local user notes
+CLAUDE.md

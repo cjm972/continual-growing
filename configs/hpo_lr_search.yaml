@@ -1,0 +1,24 @@
+# HPO config: search over learning rates, growth threshold, and prior pi.
+# !hpo: tags only resolve when loaded by HPOLoader (i.e. via the HPO CLI).
+# Plain-run loading would raise on these tags.
+experiment: mnist5
+train_mode: grow
+epochs: 5
+hidden_n: 16
+
+lr_mu:    !hpo:loguniform 1.0e-4, 1.0e-1
+lr_sigma: !hpo:loguniform 1.0e-4, 1.0e-1
+pi:       !hpo:float      0.05, 0.5
+growth_threshold: !hpo:float 0.01, 0.2
+
+hpo:
+  n_trials: 20
+  sampler: tpe
+  pruner: nop
+  master_seed: 0
+  metrics: [avg_acc]
+  valid_split: 0.1
+  n_seeds: 1
+  aggregate: mean
+  save_checkpoints: false
+  wandb_per_trial: true
