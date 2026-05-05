@@ -62,15 +62,39 @@ def _select_trainer_module(args: Any):
     raise ValueError(f"unsupported train_mode: {args.train_mode!r}")
 
 
+def _collect_complexity(model: Any, inputsize: list[int], device: str) -> dict:
+    """Snapshot model complexity: param counts + FLOPs (best-effort)."""
+    n_total = int(sum(p.numel() for p in model.parameters()))
+    n_trainable = int(sum(p.numel() for p in model.parameters() if p.requires_grad))
+    flops: int | None = None
+    was_training = model.training
+    try:
+        from fvcore.nn import FlopCountAnalysis
+        model.eval()
+        dummy = torch.zeros(1, *inputsize, device=device)
+        with torch.no_grad():
+            fca = FlopCountAnalysis(model, dummy)
+            fca.unsupported_ops_warnings(False)
+            fca.uncalled_modules_warnings(False)
+            flops = int(fca.total())
+    except Exception as exc:  # noqa: BLE001 — best-effort, must never kill training
+        print(f"[complexity] FLOPs unavailable ({type(exc).__name__}: {exc})")
+    finally:
+        if was_training:
+            model.train()
+    return {"n_params": n_total, "n_trainable_params": n_trainable, "flops": flops}
+
+
 def run_training(
     args: Any,
     *,
     on_task_done: Callable[[int, float], None] | None = None,
-) -> tuple[float, float, np.ndarray, np.ndarray]:
+) -> tuple[float, float, np.ndarray, np.ndarray, list[dict]]:
     """Run the full continual-learning task loop.
 
-    Returns `(avg_acc, bwt, acc_matrix, lss_matrix)` matching what
-    `utils.print_log_acc_bwt` computes/saves.
+    Returns `(avg_acc, bwt, acc_matrix, lss_matrix, complexity_per_task)`.
+    `complexity_per_task[t]` holds `{n_params, n_trainable_params, flops}`
+    captured AFTER the trainer finishes task `t`.
 
     `on_task_done(t, running_avg)`: optional callback invoked after each
     task completes with `running_avg = mean(acc[t, 0..t])`. Used by the
@@ -126,6 +150,7 @@ def run_training(
     n_tasks = len(taskcla)
     acc = np.zeros((n_tasks, n_tasks), dtype=np.float32)
     lss = np.zeros((n_tasks, n_tasks), dtype=np.float32)
+    complexity: list[dict] = []
     xtrain = ytrain = xvalid = yvalid = task_t = task_v = None
     for t, ncla in taskcla[args.sti:]:
         print('*' * 100)
@@ -175,9 +200,11 @@ def run_training(
             acc, '%.5f',
         )
 
+        complexity.append(_collect_complexity(model, list(inputsize), args.device))
+
         if on_task_done is not None:
             running_avg = float(np.mean(acc[t, : t + 1]))
             on_task_done(t, running_avg)
 
     avg_acc, bwt = utils.print_log_acc_bwt(args, acc, lss)
-    return float(avg_acc), float(bwt), acc, lss
+    return float(avg_acc), float(bwt), acc, lss, complexity

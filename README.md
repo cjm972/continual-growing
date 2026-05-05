@@ -11,12 +11,12 @@ python3 -m venv .venv && source .venv/bin/activate
 # CUDA 12.8 wheel for torch (matches NVIDIA driver R550+; see pyproject.toml)
 pip install --index-url https://download.pytorch.org/whl/cu128 torch torchvision
 
-# project + HPO extra (optuna, matplotlib)
-pip install -e ".[hpo]"
+# project (optuna, matplotlib, fvcore are core deps)
+pip install -e .
 ```
 
 For uv users, `[tool.uv.sources]` in `pyproject.toml` selects the cu128 index
-automatically — `uv pip install -e ".[hpo]"` is enough.
+automatically — `uv pip install -e .` is enough.
 
 CPU-only or different CUDA version: pass `--index-url` to point at the
 matching pytorch wheel index (`cpu`, `cu118`, `cu124`, etc.) before the

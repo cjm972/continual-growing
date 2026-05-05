@@ -205,15 +205,16 @@ def make_objective(
                     if trial.should_prune():
                         raise optuna.TrialPruned()
 
-                avg_acc, bwt, _acc, _lss = run_training(args, on_task_done=_on_task)
+                avg_acc, bwt, _acc, _lss, _cmplx = run_training(args, on_task_done=_on_task)
                 for i, m in enumerate(metrics):
                     per_seed_metrics[i].append(_compute_metric(m, avg_acc, bwt))
-                # Persist the CL acc matrix on the trial so plots can be
+                # Persist trial state on the Optuna trial so plots can be
                 # rebuilt from study.db alone (no per-trial files needed).
-                # Only the last seed's matrix is kept — multi-seed users
+                # Only the last seed's matrices are kept — multi-seed users
                 # who want all replicas should set save_trial_artifacts=true.
                 trial.set_user_attr("acc_matrix", _acc.tolist())
                 trial.set_user_attr("lss_matrix", _lss.tolist())
+                trial.set_user_attr("complexity_per_task", _cmplx)
 
             except KeyboardInterrupt:
                 # Honest signal — incomplete info, not a broken trial.

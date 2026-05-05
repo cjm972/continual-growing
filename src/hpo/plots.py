@@ -149,10 +149,67 @@ def _plot_per_task_curve(acc: Any, out_path: Path, title: str) -> None:
     plt.close(fig)
 
 
+def _fmt_si(value: float) -> str:
+    """Compact human-readable number: 12596 → '12.6K', 4_500_000 → '4.5M'."""
+    for suffix, scale in (("G", 1e9), ("M", 1e6), ("K", 1e3)):
+        if abs(value) >= scale:
+            return f"{value / scale:.1f}{suffix}"
+    return f"{int(value)}"
+
+
+def _plot_complexity_per_task(complexity: list, out_path: Path, title: str) -> None:
+    """Side-by-side panels: params (left) + FLOPs (right). Each bar
+    annotated with its absolute value so the magnitude is unambiguous."""
+    import matplotlib.pyplot as plt
+
+    n = len(complexity)
+    xs = list(range(n))
+    params = [c.get("n_params", 0) for c in complexity]
+    trainable = [c.get("n_trainable_params", 0) for c in complexity]
+    flops = [c.get("flops") for c in complexity]
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11.0, 4.0))
+
+    bars = ax1.bar(xs, params, color="C0", alpha=0.75, label="total")
+    if any(t != p for t, p in zip(trainable, params)):
+        ax1.bar(xs, trainable, color="C0", alpha=1.0, hatch="//", label="trainable")
+        ax1.legend(loc="best", fontsize=8)
+    ax1.set_xlabel("after training task t")
+    ax1.set_ylabel("# parameters")
+    ax1.set_xticks(xs)
+    ax1.set_title("Parameter count")
+    ax1.grid(True, axis="y", alpha=0.3)
+    for b, v in zip(bars, params):
+        ax1.text(b.get_x() + b.get_width() / 2, b.get_height(),
+                 _fmt_si(v), ha="center", va="bottom", fontsize=8)
+
+    flops_present = [(t, f) for t, f in enumerate(flops) if f is not None]
+    if flops_present:
+        ts = [t for t, _ in flops_present]
+        fs = [f for _, f in flops_present]
+        bars2 = ax2.bar(ts, fs, color="C3", alpha=0.75)
+        for b, v in zip(bars2, fs):
+            ax2.text(b.get_x() + b.get_width() / 2, b.get_height(),
+                     _fmt_si(v), ha="center", va="bottom", fontsize=8)
+    else:
+        ax2.text(0.5, 0.5, "FLOPs unavailable\n(fvcore couldn't trace the model)",
+                 ha="center", va="center", transform=ax2.transAxes)
+    ax2.set_xlabel("after training task t")
+    ax2.set_ylabel("FLOPs (forward, batch=1)")
+    ax2.set_xticks(xs)
+    ax2.set_title("Forward FLOPs")
+    ax2.grid(True, axis="y", alpha=0.3)
+
+    fig.suptitle(title)
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=120, bbox_inches="tight")
+    plt.close(fig)
+
+
 def write_cl_plots_for_trial(
     trial: Any, out_dir: Path, *, label: str
 ) -> None:
-    """Heatmap + per-task curve from a trial's `acc_matrix` user_attr."""
+    """CL accuracy + complexity plots from a trial's user_attrs."""
     acc = trial.user_attrs.get("acc_matrix")
     if acc is None:
         print(f"[plots] trial #{trial.number}: no acc_matrix in user_attrs; "
@@ -165,6 +222,11 @@ def write_cl_plots_for_trial(
     _safe("cl_per_task_curve", _plot_per_task_curve,
           acc, out_dir / "cl_per_task_curve.png",
           title=f"{label} — per-task forgetting")
+    complexity = trial.user_attrs.get("complexity_per_task")
+    if complexity:
+        _safe("complexity_per_task", _plot_complexity_per_task,
+              complexity, out_dir / "complexity_per_task.png",
+              title=f"{label} — network complexity")
 
 
 def make_study_plots(
