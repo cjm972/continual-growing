@@ -21,7 +21,7 @@ import hashlib
 import os
 import shutil
 import struct
-from collections.abc import Mapping
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -138,6 +138,7 @@ def make_objective(
     valid_split: float,
     study_dir: Path,
     study_name: str,
+    save_trial_artifacts: bool,
     save_checkpoints: bool,
     wandb_per_trial: bool,
     wandb_mode: str,
@@ -151,8 +152,16 @@ def make_objective(
 
     def objective(trial: Any) -> float | tuple[float, ...]:
         suggestions = _materialise_search_space(trial, search_space)
-        trial_dir = study_dir / "trials" / f"{trial.number}"
-        trial_dir.mkdir(parents=True, exist_ok=True)
+        # When save_trial_artifacts=False (default) the trial writes into a
+        # tempdir we nuke in the finally block — nothing per-trial lands on
+        # disk. Trial state lives in study.db + trials.csv either way.
+        if save_trial_artifacts:
+            trial_dir = study_dir / "trials" / f"{trial.number}"
+            trial_dir.mkdir(parents=True, exist_ok=True)
+            cleanup_trial_dir = False
+        else:
+            trial_dir = Path(tempfile.mkdtemp(prefix=f"cg-hpo-trial-{trial.number}-"))
+            cleanup_trial_dir = True
 
         per_seed_metrics: list[list[float]] = [[] for _ in metrics]
 
@@ -206,29 +215,34 @@ def make_objective(
             finally:
                 if wandb_run is not None:
                     wandb_run.finish()
-                if not save_checkpoints:
+                if save_trial_artifacts and not save_checkpoints:
+                    # Inside the kept trial dir, drop only the heavy
+                    # per-task model snapshots; keep the .txt acc matrix
+                    # and the final pickle for offline inspection.
                     for f in trial_dir.glob("model_*.pth.tar"):
                         try:
                             f.unlink()
                         except OSError:
                             pass
 
-        # Persist trial metadata.
-        import json
-        params_path = trial_dir / "params.yaml"
-        import yaml as _yaml
-        _yaml.safe_dump(
-            {"trial_number": trial.number, "params": dict(suggestions)},
-            params_path.open("w"), sort_keys=False,
-        )
         finals = [_aggregate(buf, aggregate) for buf in per_seed_metrics]
-        (trial_dir / "metrics.json").write_text(
-            json.dumps(
-                {"metrics": dict(zip(metrics, finals)),
-                 "n_seeds": n_seeds, "aggregate": aggregate},
-                indent=2,
+
+        if save_trial_artifacts:
+            import json
+            import yaml as _yaml
+            _yaml.safe_dump(
+                {"trial_number": trial.number, "params": dict(suggestions)},
+                (trial_dir / "params.yaml").open("w"), sort_keys=False,
             )
-        )
+            (trial_dir / "metrics.json").write_text(
+                json.dumps(
+                    {"metrics": dict(zip(metrics, finals)),
+                     "n_seeds": n_seeds, "aggregate": aggregate},
+                    indent=2,
+                )
+            )
+        elif cleanup_trial_dir:
+            shutil.rmtree(trial_dir, ignore_errors=True)
 
         if n_objectives == 1:
             return finals[0]

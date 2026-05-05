@@ -22,6 +22,7 @@ hpo:
   valid_split: 0.1
   n_seeds: 1
   aggregate: mean
+  save_trial_artifacts: false
   save_checkpoints: false
   wandb_per_trial: false
   study_name: smoke_test

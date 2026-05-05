@@ -56,7 +56,11 @@ artifacts under `hpo_runs/<study_name>/`:
 - `trials.csv` — rolling `trial_number, state, value(s), params...`
 - `best.yaml` — concrete config for the best trial (re-runnable as `--config`)
 - `pareto.csv` + `best_<metric>.yaml` — for multi-objective studies
-- `trials/<n>/params.yaml` + `metrics.json` + per-trial training outputs
+- `trials/<n>/...` — only when `hpo.save_trial_artifacts: true`. Contains
+  `params.yaml`, `metrics.json`, the per-task `.txt` accuracy matrix, and
+  the final `<exp>_<mode>_seed_<seed>.p` pickle. Default is off — trial
+  state is already in `study.db` and `trials.csv`, so writing a dir per
+  trial is just clutter.
 
 ## YAML tag grammar
 
@@ -102,7 +106,8 @@ The `hpo:` block is HPO-only. Recognised keys:
 | `valid_split`        | `0.1`        | per-task valid holdout fraction                           |
 | `wandb_per_trial`    | `true`       | one wandb run per trial, grouped by `study_name`          |
 | `wandb_mode`         | inherits CLI | `online` / `offline` / `disabled`                         |
-| `save_checkpoints`   | `false`      | when false, deletes `model_*.pth.tar` after each trial    |
+| `save_trial_artifacts` | `false`    | keep `hpo_runs/<study>/trials/<n>/` (otherwise tempdir nuked) |
+| `save_checkpoints`   | `false`      | only meaningful with `save_trial_artifacts: true`; keeps `model_*.pth.tar` |
 | `study_name`         | auto         | default: `<experiment>_<search_space_hash[:8]>`           |
 | `storage`            | sqlite       | default `sqlite:///hpo_runs/<study_name>/study.db`        |
 | `tie_break`          | `null`       | multi-obj: `weights: [...]` or `metric: <idx>`            |

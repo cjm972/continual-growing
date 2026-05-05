@@ -20,5 +20,6 @@ hpo:
   valid_split: 0.1
   n_seeds: 1
   aggregate: mean
-  save_checkpoints: false
+  save_trial_artifacts: false  # set true to keep hpo_runs/<study>/trials/<n>/
+  save_checkpoints: false      # only relevant when save_trial_artifacts=true
   wandb_per_trial: true

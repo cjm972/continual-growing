@@ -124,6 +124,7 @@ def main(argv: list[str] | None = None) -> int:
             f"hpo.aggregate must be one of {sorted(ALLOWED_AGGREGATES)}, got {aggregate!r}"
         )
     valid_split = float(hpo_block.get("valid_split", 0.1))
+    save_trial_artifacts = bool(hpo_block.get("save_trial_artifacts", False))
     save_checkpoints = bool(hpo_block.get("save_checkpoints", False))
     wandb_per_trial = bool(hpo_block.get("wandb_per_trial", True))
 
@@ -188,6 +189,7 @@ def main(argv: list[str] | None = None) -> int:
         valid_split=valid_split,
         study_dir=study_dir,
         study_name=study_name,
+        save_trial_artifacts=save_trial_artifacts,
         save_checkpoints=save_checkpoints,
         wandb_per_trial=wandb_per_trial,
         wandb_mode=wandb_mode,
