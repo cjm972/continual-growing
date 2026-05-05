@@ -92,6 +92,63 @@ layers:   !hpo:int        1, 3
 sampler:  !hpo:choice     tpe, cmaes, random
 ```
 
+## Adding a new hyperparameter
+
+Hyperparameters are defined in **one place**: the argparse parser in
+`src/run.py`. Everything else (configs, HPO search, validation) keys off
+that single declaration.
+
+1. **Declare the flag** in `src/run.py`. Pick a unique `dest` — that
+   name is what configs and `!hpo:*` tags will reference.
+
+   ```python
+   parser.add_argument('--dropout_p', default=0.0, type=float,
+                       help='Dropout probability on hidden activations.')
+   ```
+
+   If the value is from a fixed set, add `choices=[...]` — config-loaded
+   values are validated against it for free.
+
+2. **Mirror the default** in `configs/defaults.yaml` so `--config
+   defaults.yaml` produces the same args as a no-flag CLI run:
+
+   ```yaml
+   dropout_p: 0.0
+   ```
+
+3. **Use the value** wherever you need it (`args.dropout_p` in
+   `runtime.py` / `train/trainer.py` / `networks/...`). The HPO runner
+   constructs a fresh `args` namespace per trial via the same parser, so
+   no extra plumbing is needed.
+
+That's it for plain runs. To make the new arg **searchable**, add an
+`!hpo:*` tag in any HPO config:
+
+```yaml
+dropout_p: !hpo:float 0.0, 0.5
+```
+
+The runner picks it up automatically — no allow-list, no registration
+step. Optuna will see the parameter under its dotted path (`dropout_p`),
+the search-space hash will include it, and it'll appear in `trials.csv`,
+`best.yaml`, and the parameter-importance plots.
+
+**Gotchas:**
+
+- **Leaf names must be unique** across the merged YAML tree. If you put
+  `training.dropout_p` in one config and `regularization.dropout_p` in
+  another, the loader rejects the merge — pick one location and stick
+  to it across files.
+- **CLI flags always win.** Passing `--dropout_p 0.3` overrides any
+  config value (and pins it as a constant during HPO if you launch HPO
+  with that flag).
+- **Type coercion is argparse's.** YAML scalars are passed through
+  `argparse`-equivalent type coercion at apply time, so
+  `dropout_p: "0.3"` becomes `0.3` (float).
+- **Anything is searchable** — `device`, `data_path`, etc. included.
+  No guardrails: if you tag `!hpo:choice cuda, cpu` on `device`, that's
+  what you'll get. Use accordingly.
+
 ## Config schema
 
 Top-level keys mirror the argparse flags in `src/run.py`. Nested grouping
