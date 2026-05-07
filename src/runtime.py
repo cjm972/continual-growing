@@ -128,6 +128,26 @@ def run_training(
     args.inputsize, args.taskcla = inputsize, taskcla
 
     print('Inits...')
+    # Peek at the resume checkpoint BEFORE constructing the model so a grown
+    # network's hidden_n can be recovered from the saved weights — building
+    # with the wrong width would just blow up at load_state_dict time.
+    resumed_checkpoint = None
+    if args.resume == 'yes':
+        checkpoint_path = os.path.join(args.checkpoint, f'model_{args.sti}.pth.tar')
+        if os.path.exists(checkpoint_path):
+            print(f'Peeking at checkpoint {checkpoint_path} to adjust architecture...')
+            resumed_checkpoint = torch.load(checkpoint_path, map_location='cpu')
+            if args.train_mode == 'grow' and 'model_state_dict' in resumed_checkpoint:
+                sd = resumed_checkpoint['model_state_dict']
+                if 'fc1.weight_mu' in sd:
+                    new_hidden = sd['fc1.weight_mu'].shape[0]
+                    if new_hidden != args.hidden_n:
+                        print(f'  [resume] Detected hidden_n={new_hidden} in checkpoint (current args={args.hidden_n}). Overriding.')
+                        args.hidden_n = new_hidden
+        else:
+            print(f'WARNING: Checkpoint {checkpoint_path} not found. Starting from scratch.')
+            args.resume = 'no'
+
     model = network.Net(args).to(args.device)
     try:
         import wandb
@@ -140,10 +160,11 @@ def run_training(
     trainer = trainer_module.Trainer(model, args=args)
     print('-' * 100)
 
-    if args.resume == 'yes':
-        ckpt = torch.load(os.path.join(args.checkpoint, f'model_{args.sti}.pth.tar'))
-        model.load_state_dict(ckpt['model_state_dict'])
+    if args.resume == 'yes' and resumed_checkpoint is not None:
+        print(f'Loading state_dict from task {args.sti}...')
+        model.load_state_dict(resumed_checkpoint['model_state_dict'])
         model = model.to(device=args.device)
+        del resumed_checkpoint
     else:
         args.sti = 0
 

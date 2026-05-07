@@ -31,6 +31,9 @@ static: false
 growth_rate: 5
 growth_saturation: 0.2
 growth_threshold: 0.05
+successive_inhibition: false
+inhibition_samples: 5
+gamma_inhibition: 0.5
 resume: 'no'
 sti: 0
 valid_split: 0.0

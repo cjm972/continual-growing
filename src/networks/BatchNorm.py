@@ -32,8 +32,7 @@ class _BatchNorm(nn.Module):
                                                       device=self.device, dtype=torch.float32).normal_(0., 0.1),
                                           requires_grad=True)
             self.weight_rho = nn.Parameter(self.rho + torch.empty((self.num_features),
-                                                                  device=self.device, dtype=torch.float32).normal_(0.,
-                                                                                                                   0.1),
+                                                                  device=self.device, dtype=torch.float32).normal_(0., 0.1),
                                            requires_grad=True)
 
             self.weight = VariationalPosterior(self.weight_mu, self.weight_rho, self.device)

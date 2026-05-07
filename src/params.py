@@ -105,6 +105,19 @@ class Params:
     growth_saturation: float = _flag(0.2, type=float, help="Saturation fraction trigger.")
     growth_threshold: float = _flag(0.05, type=float, help="Stdev threshold for saturation.")
 
+    # --- Lateral inhibition ----------------------------------------------
+    successive_inhibition: bool = _flag(
+        False, action="store_true",
+        help="Enable asymmetric successive lateral inhibition.",
+    )
+    inhibition_samples: int = _flag(
+        5, type=int,
+        help="Samples used to estimate pre-activation variance for inhibition.",
+    )
+    gamma_inhibition: float = _flag(
+        0.5, type=float, help="Scaling factor for inhibition strength.",
+    )
+
     # --- Resume / continuation -------------------------------------------
     resume: str = _flag("no", type=str, help="Resume from checkpoint? ('yes' / 'no').")
     sti: int = _flag(0, type=int, help="Starting task index.")
