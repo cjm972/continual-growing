@@ -1,0 +1,79 @@
+Starting this run on :
+2026-05-06 16:51
+Load data...
+Input size = [1, 28, 28]
+Task info = [(0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10)]
+Inits...
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+****************************************************************************************************
+Task  0 (pmnist-0)
+****************************************************************************************************
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:41<00:00, 22.45it/s]
+| Epoch   1, time= 44.6ms/ 10.9ms | Train: loss=0.000, acc= 78.8% | Valid: loss=0.000, acc= 78.8% | *
+----------------------------------------------------------------------------------------------------
+>>> Test on task  0 - pmnist-0       : loss=0.000, acc=79.150% <<<
+Save at ../checkpoints/pmnist_grow
+****************************************************************************************************
+Task  1 (pmnist-1)
+****************************************************************************************************
+  [grow] fc1: 16 -> 21 units
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:42<00:00, 21.93it/s]
+| Epoch   1, time= 45.7ms/ 10.9ms | Train: loss=0.000, acc= 78.2% | Valid: loss=0.000, acc= 78.2% | *
+----------------------------------------------------------------------------------------------------
+>>> Test on task  0 - pmnist-0       : loss=0.000, acc=76.590% <<<
+>>> Test on task  1 - pmnist-1       : loss=0.000, acc=79.050% <<<
+Save at ../checkpoints/pmnist_grow
+****************************************************************************************************
+Task  2 (pmnist-2)
+****************************************************************************************************
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:42<00:00, 21.86it/s]
+| Epoch   1, time= 45.8ms/ 11.0ms | Train: loss=0.000, acc= 75.3% | Valid: loss=0.000, acc= 75.3% | *
+----------------------------------------------------------------------------------------------------
+>>> Test on task  0 - pmnist-0       : loss=0.000, acc=74.130% <<<
+>>> Test on task  1 - pmnist-1       : loss=0.000, acc=76.170% <<<
+>>> Test on task  2 - pmnist-2       : loss=0.000, acc=75.910% <<<
+Save at ../checkpoints/pmnist_grow
+****************************************************************************************************
+Task  3 (pmnist-3)
+****************************************************************************************************
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:44<00:00, 21.07it/s]
+| Epoch   1, time= 47.5ms/ 10.9ms | Train: loss=0.000, acc= 77.7% | Valid: loss=0.000, acc= 77.7% | *
+----------------------------------------------------------------------------------------------------
+>>> Test on task  0 - pmnist-0       : loss=0.000, acc=70.890% <<<
+>>> Test on task  1 - pmnist-1       : loss=0.000, acc=76.750% <<<
+>>> Test on task  2 - pmnist-2       : loss=0.000, acc=73.810% <<<
+>>> Test on task  3 - pmnist-3       : loss=0.000, acc=77.790% <<<
+Save at ../checkpoints/pmnist_grow
+****************************************************************************************************
+Task  4 (pmnist-4)
+****************************************************************************************************
+Training epoch:  16%|███████▌                                       | 151/938 [00:06<00:36, 21.58it/s]
+
+----------------------------------------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cmetzner/lalaland/continual_growing/src/run.py", line 205, in <module>
+    test_loss,test_acc=trainer.eval(u,xtest,ytest,debug=True)
+                       ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cmetzner/lalaland/continual_growing/src/train/trainer.py", line 510, in eval
+    loss = self.elbo_loss(images, targets, t, num_batches,sample=False,debug=debug)
+  File "/Users/cmetzner/lalaland/continual_growing/src/train/trainer.py", line 549, in elbo_loss
+    pred = self.model(input,sample=False)[t]
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cmetzner/miniconda3/envs/continual_growing/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/cmetzner/miniconda3/envs/continual_growing/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/Users/cmetzner/lalaland/continual_growing/src/networks/mlp_grow.py", line 116, in forward
+    out = self.classifier[0](x, sample)
+  File "/Users/cmetzner/miniconda3/envs/continual_growing/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/cmetzner/miniconda3/envs/continual_growing/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/Users/cmetzner/lalaland/continual_growing/src/networks/FC.py", line 217, in forward
+    return F.linear(input, weight, bias)
+           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt

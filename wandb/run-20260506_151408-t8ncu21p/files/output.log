@@ -1,0 +1,25 @@
+Starting this run on :
+2026-05-06 15:14
+Load data...
+Input size = [1, 28, 28]
+Task info = [(0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10)]
+Inits...
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+****************************************************************************************************
+Task  0 (pmnist-0)
+****************************************************************************************************
+
+  [lr-check] task=0 epoch=0 (update_lr arg=0)
+    group 0: scalar lr=0.01
+    group 1: scalar lr=0.01
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:38<00:00, 24.68it/s]
+Traceback (most recent call last):
+  File "/Users/cmetzner/lalaland/continual_growing/src/run.py", line 198, in <module>
+    trainer.train(task,xtrain,ytrain,xvalid,yvalid, data=data)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cmetzner/lalaland/continual_growing/src/train/trainer.py", line 96, in train
+    replay_rate = getattr(self.args, 'replay_rate', 0)
+                          ^^^^^^^^^
+AttributeError: 'Trainer' object has no attribute 'args'

@@ -1,0 +1,159 @@
+Starting this run on :
+2026-05-06 15:18
+Load data...
+Input size = [1, 28, 28]
+Task info = [(0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10)]
+Inits...
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+****************************************************************************************************
+Task  0 (pmnist-0)
+****************************************************************************************************
+
+  [lr-check] task=0 epoch=0 (update_lr arg=0)
+    group 0: scalar lr=0.01
+    group 1: scalar lr=0.01
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:37<00:00, 24.92it/s]
+| Epoch   1, time= 40.2ms/ 10.9ms | Train: loss=0.000, acc= 80.1% | Valid: loss=0.000, acc= 80.1% | *
+  [grow] fc1: 16 -> 21 units
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:38<00:00, 24.19it/s]
+| Epoch   2, time= 41.4ms/ 10.9ms | Train: loss=0.000, acc= 81.7% | Valid: loss=0.000, acc= 81.7% | *
+
+  [lr-check] task=0 epoch=2 (update_lr arg=2)
+    group 0: Tensor lr shape=[21, 784], unique=12534/16464, min=2.494441e-05, max=4.042969e-02
+    group 1: Tensor lr shape=[21], unique=17/21, min=8.407991e-04, max=1.000000e-02
+    group 2: scalar lr=0.01
+    group 3: scalar lr=0.01
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:38<00:00, 24.13it/s]
+| Epoch   3, time= 41.5ms/ 11.0ms | Train: loss=0.000, acc= 82.0% | Valid: loss=0.000, acc= 82.0% | *
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:38<00:00, 24.10it/s]
+| Epoch   4, time= 41.5ms/ 11.0ms | Train: loss=0.000, acc= 82.2% | Valid: loss=0.000, acc= 82.2% | *
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:38<00:00, 24.09it/s]
+| Epoch   5, time= 41.5ms/ 11.0ms | Train: loss=0.000, acc= 82.5% | Valid: loss=0.000, acc= 82.5% | *
+
+  [lr-check] task=0 epoch=5 (update_lr arg=5)
+    group 0: Tensor lr shape=[21, 784], unique=12541/16464, min=6.843441e-07, max=1.476880e-01
+    group 1: Tensor lr shape=[21], unique=17/21, min=8.366264e-04, max=1.000000e-02
+    group 2: scalar lr=0.01
+    group 3: scalar lr=0.01
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:39<00:00, 24.01it/s]
+| Epoch   6, time= 41.7ms/ 11.0ms | Train: loss=0.000, acc= 82.4% | Valid: loss=0.000, acc= 82.4% | *
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:39<00:00, 24.03it/s]
+| Epoch   7, time= 41.6ms/ 11.0ms | Train: loss=0.000, acc= 82.9% | Valid: loss=0.000, acc= 82.9% | *
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:39<00:00, 24.02it/s]
+| Epoch   8, time= 41.7ms/ 11.0ms | Train: loss=0.000, acc= 83.1% | Valid: loss=0.000, acc= 83.1% | *
+
+  [lr-check] task=0 epoch=8 (update_lr arg=8)
+    group 0: Tensor lr shape=[21, 784], unique=12541/16464, min=8.172575e-10, max=2.551290e-01
+    group 1: Tensor lr shape=[21], unique=17/21, min=8.324630e-04, max=1.000000e-02
+    group 2: scalar lr=0.01
+    group 3: scalar lr=0.01
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:38<00:00, 24.13it/s]
+| Epoch   9, time= 41.5ms/ 11.0ms | Train: loss=0.000, acc= 82.9% | Valid: loss=0.000, acc= 82.9% |
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:38<00:00, 24.23it/s]
+| Epoch  10, time= 41.3ms/ 10.9ms | Train: loss=0.000, acc= 82.6% | Valid: loss=0.000, acc= 82.6% | *
+----------------------------------------------------------------------------------------------------
+>>> Test on task  0 - pmnist-0       : loss=0.000, acc=82.370% <<<
+Save at ../checkpoints/pmnist_grow
+****************************************************************************************************
+Task  1 (pmnist-1)
+****************************************************************************************************
+
+  [lr-check] task=1 epoch=0 (update_lr arg=10)
+    group 0: Tensor lr shape=[21, 784], unique=16454/16464, min=1.013299e-11, max=3.268059e-01
+    group 1: Tensor lr shape=[21], unique=21/21, min=7.760257e-04, max=1.136030e-03
+    group 2: scalar lr=0.01
+    group 3: scalar lr=0.01
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:38<00:00, 24.17it/s]
+| Epoch   1, time= 41.4ms/ 11.0ms | Train: loss=0.000, acc= 65.2% | Valid: loss=0.000, acc= 65.2% | *
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:38<00:00, 24.18it/s]
+  [Replay] Interleaving 1 epoch of Task 0...
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:39<00:00, 23.67it/s]
+| Epoch   2, time= 83.7ms/ 10.9ms | Train: loss=0.000, acc= 73.3% | Valid: loss=0.000, acc= 73.3% | *
+
+  [lr-check] task=1 epoch=2 (update_lr arg=12)
+    group 0: Tensor lr shape=[21, 784], unique=16447/16464, min=9.530053e-16, max=4.335225e-01
+    group 1: Tensor lr shape=[21], unique=21/21, min=7.642135e-04, max=1.117326e-03
+    group 2: scalar lr=0.01
+    group 3: scalar lr=0.01
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:38<00:00, 24.08it/s]
+| Epoch   3, time= 41.6ms/ 11.0ms | Train: loss=0.000, acc= 77.1% | Valid: loss=0.000, acc= 77.1% | *
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:39<00:00, 24.04it/s]
+  [Replay] Interleaving 1 epoch of Task 0...
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:39<00:00, 23.94it/s]
+| Epoch   4, time= 83.4ms/ 11.0ms | Train: loss=0.000, acc= 78.0% | Valid: loss=0.000, acc= 78.0% | *
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:39<00:00, 24.01it/s]
+| Epoch   5, time= 41.7ms/ 11.1ms | Train: loss=0.000, acc= 79.3% | Valid: loss=0.000, acc= 79.3% | *
+
+  [lr-check] task=1 epoch=5 (update_lr arg=15)
+    group 0: Tensor lr shape=[21, 784], unique=16451/16464, min=2.567237e-22, max=5.767161e-01
+    group 1: Tensor lr shape=[21], unique=21/21, min=7.541638e-04, max=1.120228e-03
+    group 2: scalar lr=0.01
+    group 3: scalar lr=0.01
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:39<00:00, 24.02it/s]
+  [Replay] Interleaving 1 epoch of Task 0...
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:39<00:00, 23.94it/s]
+| Epoch   6, time= 83.5ms/ 11.1ms | Train: loss=0.000, acc= 78.3% | Valid: loss=0.000, acc= 78.3% |
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:38<00:00, 24.20it/s]
+| Epoch   7, time= 41.3ms/ 11.1ms | Train: loss=0.000, acc= 80.2% | Valid: loss=0.000, acc= 80.2% | *
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:38<00:00, 24.17it/s]
+  [Replay] Interleaving 1 epoch of Task 0...
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:39<00:00, 24.01it/s]
+| Epoch   8, time= 83.1ms/ 11.0ms | Train: loss=0.000, acc= 79.3% | Valid: loss=0.000, acc= 79.3% |
+
+  [lr-check] task=1 epoch=8 (update_lr arg=18)
+    group 0: Tensor lr shape=[21, 784], unique=16446/16464, min=6.126874e-29, max=7.558763e-01
+    group 1: Tensor lr shape=[21], unique=21/21, min=7.204193e-04, max=1.104174e-03
+    group 2: scalar lr=0.01
+    group 3: scalar lr=0.01
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:38<00:00, 24.09it/s]
+| Epoch   9, time= 41.5ms/ 11.0ms | Train: loss=0.000, acc= 80.4% | Valid: loss=0.000, acc= 80.4% | *
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:38<00:00, 24.15it/s]
+  [Replay] Interleaving 1 epoch of Task 0...
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:39<00:00, 24.01it/s]
+| Epoch  10, time= 83.1ms/ 11.0ms | Train: loss=0.000, acc= 79.4% | Valid: loss=0.000, acc= 79.4% |
+----------------------------------------------------------------------------------------------------
+>>> Test on task  0 - pmnist-0       : loss=0.000, acc=81.430% <<<
+>>> Test on task  1 - pmnist-1       : loss=0.000, acc=80.420% <<<
+Save at ../checkpoints/pmnist_grow
+****************************************************************************************************
+Task  2 (pmnist-2)
+****************************************************************************************************
+
+  [lr-check] task=2 epoch=0 (update_lr arg=20)
+    group 0: Tensor lr shape=[21, 784], unique=16450/16464, min=1.795382e-30, max=7.917436e-01
+    group 1: Tensor lr shape=[21], unique=21/21, min=7.134003e-04, max=1.104387e-03
+    group 2: scalar lr=0.01
+    group 3: scalar lr=0.01
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:38<00:00, 24.17it/s]
+| Epoch   1, time= 41.4ms/ 11.0ms | Train: loss=0.000, acc= 55.8% | Valid: loss=0.000, acc= 55.8% | *
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:38<00:00, 24.17it/s]
+  [Replay] Interleaving 1 epoch of Task 0...
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:38<00:00, 24.10it/s]
+  [Replay] Interleaving 1 epoch of Task 1...
+Training epoch: 100%|███████████████████████████████████████████████| 938/938 [00:39<00:00, 23.94it/s]
+| Epoch   2, time=124.7ms/ 11.0ms | Train: loss=0.001, acc= 57.4% | Valid: loss=0.001, acc= 57.4% |
+Traceback (most recent call last):
+  File "/Users/cmetzner/lalaland/continual_growing/src/run.py", line 198, in <module>
+    trainer.train(task,xtrain,ytrain,xvalid,yvalid, data=data)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cmetzner/lalaland/continual_growing/src/train/trainer.py", line 144, in train
+    self.log_histograms(t, e, lr)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/Users/cmetzner/lalaland/continual_growing/src/train/trainer.py", line 363, in log_histograms
+    metrics[f"dist/{name}/stdev.weight"] = wandb.Histogram(w_stdev.cpu().numpy())
+                                           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cmetzner/miniconda3/envs/continual_growing/lib/python3.14/site-packages/wandb/sdk/data_types/histogram.py", line 89, in __init__
+    histogram, bins = np.histogram(sequence, bins=num_bins)
+                      ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cmetzner/miniconda3/envs/continual_growing/lib/python3.14/site-packages/numpy/lib/_histograms_impl.py", line 792, in histogram
+    bin_edges, uniform_bins = _get_bin_edges(a, bins, range, weights)
+                              ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cmetzner/miniconda3/envs/continual_growing/lib/python3.14/site-packages/numpy/lib/_histograms_impl.py", line 425, in _get_bin_edges
+    first_edge, last_edge = _get_outer_edges(a, range)
+                            ~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/Users/cmetzner/miniconda3/envs/continual_growing/lib/python3.14/site-packages/numpy/lib/_histograms_impl.py", line 317, in _get_outer_edges
+    raise ValueError(
+        f"autodetected range of [{first_edge}, {last_edge}] is not finite")
+ValueError: autodetected range of [2.0074485968258e-31, inf] is not finite

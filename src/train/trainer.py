@@ -26,6 +26,8 @@ class Trainer(object):
         self.epochs=args.epochs
 
         self.arch=args.arch
+        self.orthogonal_init = args.orthogonal_init
+        self.replay_rate = args.replay_rate
         self.samples=args.samples
         self.lambda_=1.
 
@@ -43,7 +45,7 @@ class Trainer(object):
 
 
 
-    def train(self, t, xtrain, ytrain, xvalid, yvalid):
+    def train(self, t, xtrain, ytrain, xvalid, yvalid, data=None):
 
         # Clear new parameter masks so they become "old" for this task
         for name, m in self.model.named_modules():
@@ -53,20 +55,17 @@ class Trainer(object):
                 m.bias_mask_new.fill_(False)
 
         best_loss=np.inf
-
-        # best_model=copy.deepcopy(self.model)
         best_model = copy.deepcopy(self.model.state_dict())
         lr_mu = self.lr_mu
         lr_sigma = self.lr_sigma
         patience = self.lr_patience
 
-
         # Loop epochs
         try:
             for e in range(self.epochs):
-                global_e = t*self.epochs + e
+                global_e = t * self.epochs + e
                 # Train
-                clock0=time.time()
+                clock0 = time.time()
                 # grow network size and update parameters at every epoch!
                 old_num_params = sum(p.numel() for p in self.model.parameters())
                 self.grow(global_e)
@@ -76,33 +75,28 @@ class Trainer(object):
                 params_dict = self.update_lr(global_e)
                 self.optimizer = BayesianSGD(params=params_dict)
 
-                # ── LR diagnostic (runs every epoch) ──
-                if e == 0 or (e + 1) % max(1, self.epochs // 3) == 0:
-                    print(f'\n  [lr-check] task={t} epoch={e} (update_lr arg={global_e})')
-                    for gi, group in enumerate(self.optimizer.param_groups):
-                        lr = group['lr']
-                        if isinstance(lr, torch.Tensor):
-                            n_unique = lr.unique().numel()
-                            print(f'    group {gi}: Tensor lr shape={list(lr.shape)}, '
-                                  f'unique={n_unique}/{lr.numel()}, '
-                                  f'min={lr.min():.6e}, max={lr.max():.6e}')
-                        else:
-                            print(f'    group {gi}: scalar lr={lr}')
-
-
-                self.train_epoch(t,xtrain,ytrain)
-                clock1=time.time()
-                train_loss,train_acc=self.eval(t,xtrain,ytrain)
-                clock2=time.time()
+                self.train_epoch(t, xtrain, ytrain)
+                
+                # Interleaved Replay of older tasks
+                if self.replay_rate > 0 and (e + 1) % self.replay_rate == 0 and data is not None:
+                    for u in range(t):
+                        print(f"  [Replay] Interleaving 1 epoch of Task {u}...")
+                        x_u = data[u]['train']['x'].to(self.device)
+                        y_u = data[u]['train']['y'].to(self.device)
+                        self.train_epoch(u, x_u, y_u)
+                
+                clock1 = time.time()
+                train_loss, train_acc = self.eval(t, xtrain, ytrain)
+                clock2 = time.time()
 
                 print('| Epoch {:3d}, time={:5.1f}ms/{:5.1f}ms | Train: loss={:.3f}, acc={:5.1f}% |'.format(e+1,
                     1000*self.sbatch*(clock1-clock0)/xtrain.size(0),1000*self.sbatch*(clock2-clock1)/xtrain.size(0),
                     train_loss,100*train_acc),end='')
                 wandb.log({"task": t, "epoch": e, "train_loss": train_loss, "train_acc": train_acc})
+                
                 # Valid
-                valid_loss,valid_acc=self.eval(t,xvalid,yvalid)
+                valid_loss, valid_acc = self.eval(t, xvalid, yvalid)
                 print(' Valid: loss={:.3f}, acc={:5.1f}% |'.format(valid_loss, 100 * valid_acc), end='')
-
                 wandb.log({"task": t, "epoch": e, "valid_loss": valid_loss, "valid_acc": valid_acc})
 
                 if math.isnan(valid_loss) or math.isnan(train_loss):
@@ -110,29 +104,31 @@ class Trainer(object):
                     break
 
                 # Adapt lr
-                if valid_loss<best_loss:
-                    best_loss=valid_loss
-                    best_model=copy.deepcopy(self.model.state_dict())
-                    patience=self.lr_patience
-                    print(' *',end='')
+                if valid_loss < best_loss:
+                    best_loss = valid_loss
+                    best_model = copy.deepcopy(self.model.state_dict())
+                    patience = self.lr_patience
+                    print(' *', end='')
                 else:
-                    patience-=1
-                    if patience<=0:
+                    patience -= 1
+                    if patience <= 0:
                         lr_mu /= self.lr_factor
                         lr_sigma /= self.lr_factor
-                        print(' lr_mu={:.1e} lr_sigma={:.1e}'.format(lr_mu, lr_sigma),end='')
+                        print(' lr_mu={:.1e} lr_sigma={:.1e}'.format(lr_mu, lr_sigma), end='')
                         if lr_mu < self.lr_min:
                             print()
                             break
-                        patience=self.lr_patience
-
+                        patience = self.lr_patience
                         params_dict = self.update_lr(global_e, adaptive_lr=True, lr_mu=lr_mu, lr_sigma=lr_sigma)
-                        self.optimizer=BayesianSGD(params=params_dict)
+                        self.optimizer = BayesianSGD(params=params_dict)
 
                 # Log histograms
+                for group in self.optimizer.param_groups:
+                    lr = group['lr']
+                    break
                 self.log_histograms(t, e, lr)
-
                 print()
+
         except KeyboardInterrupt:
             print()
 
@@ -182,8 +178,8 @@ class Trainer(object):
 
                 else:
                     # calculate weight uncertainty
-                    w_unc = torch.log1p(torch.exp(m.weight_rho.data))
-                    b_unc = torch.log1p(torch.exp(m.bias_rho.data))
+                    w_unc = F.softplus(m.weight_rho.data)
+                    b_unc = F.softplus(m.bias_rho.data)
                     
                     # create parameter-wise learning rates
                     w_lr = torch.mul(w_unc, current_lr_mu)
@@ -247,7 +243,7 @@ class Trainer(object):
 
         for name, m in hidden_layers:
             if hasattr(m, 'weight_rho'):
-                w_stdev = torch.log1p(torch.exp(m.weight_rho.data))
+                w_stdev = F.softplus(m.weight_rho.data)
                 if hasattr(m, 'weight_mask_new') and m.weight_mask_new is not None and m.weight_mask_new.any():
                     w_eval = w_stdev[m.weight_mask_new]
                 else:
@@ -257,7 +253,7 @@ class Trainer(object):
                 total_params += w_eval.numel()
 
             if hasattr(m, 'use_bias') and m.use_bias and hasattr(m, 'bias_rho'):
-                b_stdev = torch.log1p(torch.exp(m.bias_rho.data))
+                b_stdev = F.softplus(m.bias_rho.data)
                 if hasattr(m, 'bias_mask_new') and m.bias_mask_new is not None and m.bias_mask_new.any():
                     b_eval = b_stdev[m.bias_mask_new]
                 else:
@@ -299,6 +295,18 @@ class Trainer(object):
         return self.model
 
 
+    def safe_histogram(self, data):
+        """Filter out non-finite values before creating a WandB Histogram."""
+        if isinstance(data, torch.Tensor):
+            data = data.detach().cpu().numpy()
+        flat_data = data.flatten()
+        finite_data = flat_data[np.isfinite(flat_data)]
+        if len(finite_data) == 0:
+            # If everything is non-finite, we return 0 to avoid crash
+            return 0.0
+        return wandb.Histogram(finite_data)
+
+
     def log_histograms(self, t, e, current_lr):
         metrics = {}
         # Pull actual learning rates from the optimizer's param groups
@@ -319,22 +327,22 @@ class Trainer(object):
                 lr_mu = param_to_lr.get(w_mu, 0.0)
                 if has_new:
                     if mask_old.any():
-                        metrics[f"dist/{name}/mu.weight_old"] = wandb.Histogram(w_mu.data[mask_old].cpu().numpy())
+                        metrics[f"dist/{name}/mu.weight_old"] = self.safe_histogram(w_mu.data[mask_old].cpu().numpy())
                         if isinstance(lr_mu, torch.Tensor):
-                            metrics[f"dist/{name}/mu.lr_old"] = wandb.Histogram(lr_mu[mask_old].cpu().numpy())
-                    metrics[f"dist/{name}/mu.weight_new"] = wandb.Histogram(w_mu.data[mask_new].cpu().numpy())
+                            metrics[f"dist/{name}/mu.lr_old"] = self.safe_histogram(lr_mu[mask_old].cpu().numpy())
+                    metrics[f"dist/{name}/mu.weight_new"] = self.safe_histogram(w_mu.data[mask_new].cpu().numpy())
                     if isinstance(lr_mu, torch.Tensor):
-                        metrics[f"dist/{name}/mu.lr_new"] = wandb.Histogram(lr_mu[mask_new].cpu().numpy())
+                        metrics[f"dist/{name}/mu.lr_new"] = self.safe_histogram(lr_mu[mask_new].cpu().numpy())
                 else:
-                    metrics[f"dist/{name}/mu.weight"] = wandb.Histogram(w_mu.data.cpu().numpy())
+                    metrics[f"dist/{name}/mu.weight"] = self.safe_histogram(w_mu.data.cpu().numpy())
                     if isinstance(lr_mu, torch.Tensor):
-                        metrics[f"dist/{name}/mu.lr"] = wandb.Histogram(lr_mu.cpu().numpy())
+                        metrics[f"dist/{name}/mu.lr"] = self.safe_histogram(lr_mu.cpu().numpy())
                     else:
                         metrics[f"dist/{name}/mu.lr"] = lr_mu
 
                 # stdev tracking
                 w_rho = m.weight_rho
-                w_stdev = torch.log1p(torch.exp(w_rho.data))
+                w_stdev = F.softplus(w_rho.data)
                 lr_stdev = param_to_lr.get(w_rho, 0.0)
                 
                 # Scalar logs for tracking trends
@@ -342,16 +350,16 @@ class Trainer(object):
 
                 if has_new:
                     if mask_old.any():
-                        metrics[f"dist/{name}/stdev.weight_old"] = wandb.Histogram(w_stdev[mask_old].cpu().numpy())
+                        metrics[f"dist/{name}/stdev.weight_old"] = self.safe_histogram(w_stdev[mask_old].cpu().numpy())
                         if isinstance(lr_stdev, torch.Tensor):
-                            metrics[f"dist/{name}/stdev.lr_old"] = wandb.Histogram(lr_stdev[mask_old].cpu().numpy())
-                    metrics[f"dist/{name}/stdev.weight_new"] = wandb.Histogram(w_stdev[mask_new].cpu().numpy())
+                            metrics[f"dist/{name}/stdev.lr_old"] = self.safe_histogram(lr_stdev[mask_old].cpu().numpy())
+                    metrics[f"dist/{name}/stdev.weight_new"] = self.safe_histogram(w_stdev[mask_new].cpu().numpy())
                     if isinstance(lr_stdev, torch.Tensor):
-                        metrics[f"dist/{name}/stdev.lr_new"] = wandb.Histogram(lr_stdev[mask_new].cpu().numpy())
+                        metrics[f"dist/{name}/stdev.lr_new"] = self.safe_histogram(lr_stdev[mask_new].cpu().numpy())
                 else:
-                    metrics[f"dist/{name}/stdev.weight"] = wandb.Histogram(w_stdev.cpu().numpy())
+                    metrics[f"dist/{name}/stdev.weight"] = self.safe_histogram(w_stdev.cpu().numpy())
                     if isinstance(lr_stdev, torch.Tensor):
-                        metrics[f"dist/{name}/stdev.lr"] = wandb.Histogram(lr_stdev.cpu().numpy())
+                        metrics[f"dist/{name}/stdev.lr"] = self.safe_histogram(lr_stdev.cpu().numpy())
                     else:
                         metrics[f"dist/{name}/stdev.lr"] = lr_stdev
                 
@@ -369,36 +377,36 @@ class Trainer(object):
                     
                     if b_has_new:
                         if b_mask_old.any():
-                            metrics[f"dist/{name}/mu.bias_old"] = wandb.Histogram(b_mu.data[b_mask_old].cpu().numpy())
+                            metrics[f"dist/{name}/mu.bias_old"] = self.safe_histogram(b_mu.data[b_mask_old].cpu().numpy())
                             if isinstance(lr_b_mu, torch.Tensor):
-                                metrics[f"dist/{name}/mu.bias_lr_old"] = wandb.Histogram(lr_b_mu[b_mask_old].cpu().numpy())
-                        metrics[f"dist/{name}/mu.bias_new"] = wandb.Histogram(b_mu.data[b_mask_new].cpu().numpy())
+                                metrics[f"dist/{name}/mu.bias_lr_old"] = self.safe_histogram(lr_b_mu[b_mask_old].cpu().numpy())
+                        metrics[f"dist/{name}/mu.bias_new"] = self.safe_histogram(b_mu.data[b_mask_new].cpu().numpy())
                         if isinstance(lr_b_mu, torch.Tensor):
-                            metrics[f"dist/{name}/mu.bias_lr_new"] = wandb.Histogram(lr_b_mu[b_mask_new].cpu().numpy())
+                            metrics[f"dist/{name}/mu.bias_lr_new"] = self.safe_histogram(lr_b_mu[b_mask_new].cpu().numpy())
                     else:
-                        metrics[f"dist/{name}/mu.bias"] = wandb.Histogram(b_mu.data.cpu().numpy())
+                        metrics[f"dist/{name}/mu.bias"] = self.safe_histogram(b_mu.data.cpu().numpy())
                         if isinstance(lr_b_mu, torch.Tensor):
-                            metrics[f"dist/{name}/mu.bias_lr"] = wandb.Histogram(lr_b_mu.cpu().numpy())
+                            metrics[f"dist/{name}/mu.bias_lr"] = self.safe_histogram(lr_b_mu.cpu().numpy())
                         else:
                             metrics[f"dist/{name}/mu.bias_lr"] = lr_b_mu
 
                     b_rho = m.bias_rho
-                    b_stdev = torch.log1p(torch.exp(b_rho.data))
+                    b_stdev = F.softplus(b_rho.data)
                     lr_b_stdev = param_to_lr.get(b_rho, 0.0)
                     
                     if b_has_new:
                         if b_mask_old.any():
-                            metrics[f"dist/{name}/stdev.bias_old"] = wandb.Histogram(b_stdev[b_mask_old].cpu().numpy())
+                            metrics[f"dist/{name}/stdev.bias_old"] = self.safe_histogram(b_stdev[b_mask_old].cpu().numpy())
                             if isinstance(lr_b_stdev, torch.Tensor):
-                                metrics[f"dist/{name}/stdev.bias_lr_old"] = wandb.Histogram(lr_b_stdev[b_mask_old].cpu().numpy())
+                                metrics[f"dist/{name}/stdev.bias_lr_old"] = self.safe_histogram(lr_b_stdev[b_mask_old].cpu().numpy())
                         
-                        metrics[f"dist/{name}/stdev.bias_new"] = wandb.Histogram(b_stdev[b_mask_new].cpu().numpy())
+                        metrics[f"dist/{name}/stdev.bias_new"] = self.safe_histogram(b_stdev[b_mask_new].cpu().numpy())
                         if isinstance(lr_b_stdev, torch.Tensor):
-                            metrics[f"dist/{name}/stdev.bias_lr_new"] = wandb.Histogram(lr_b_stdev[b_mask_new].cpu().numpy())
+                            metrics[f"dist/{name}/stdev.bias_lr_new"] = self.safe_histogram(lr_b_stdev[b_mask_new].cpu().numpy())
                     else:
-                        metrics[f"dist/{name}/stdev.bias"] = wandb.Histogram(b_stdev.cpu().numpy())
+                        metrics[f"dist/{name}/stdev.bias"] = self.safe_histogram(b_stdev.cpu().numpy())
                         if isinstance(lr_b_stdev, torch.Tensor):
-                            metrics[f"dist/{name}/stdev.bias_lr"] = wandb.Histogram(lr_b_stdev.cpu().numpy())
+                            metrics[f"dist/{name}/stdev.bias_lr"] = self.safe_histogram(lr_b_stdev.cpu().numpy())
                         else:
                             metrics[f"dist/{name}/stdev.bias_lr"] = lr_b_stdev
 

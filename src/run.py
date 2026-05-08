@@ -47,6 +47,10 @@ parser.add_argument('--growth_threshold',   default=0.05,           type=float, 
 parser.add_argument('--successive_inhibition', action='store_true', help='Enable asymmetric successive lateral inhibition')
 parser.add_argument('--inhibition_samples', default=5,              type=int,     help='Number of samples to estimate pre-activation variance for inhibition')
 parser.add_argument('--gamma_inhibition',    default=0.5,            type=float,   help='Scaling factor for inhibition strength')
+parser.add_argument('--soft_wta',           action='store_true',    help='Enable soft winner-take-all: only top 30 percent of neurons activate')
+
+parser.add_argument('--replay_rate',          default=3,               type=int,   help='Interleave replay every K epochs (0 = off)')
+parser.add_argument('--orthogonal_init',     action='store_true',    help='Use orthogonal initialization for newly added neurons via QR')
 
 parser.add_argument('--resume',          default='no',            type=str,   help='resume?')
 parser.add_argument('--sti',             default=0,               type=int,   help='starting task?')
@@ -191,7 +195,7 @@ for t,ncla in taskcla[args.sti:]:
         task=t
 
     # Train
-    trainer.train(task,xtrain,ytrain,xvalid,yvalid)
+    trainer.train(task,xtrain,ytrain,xvalid,yvalid, data=data)
     print('-'*100)
 
     # Test

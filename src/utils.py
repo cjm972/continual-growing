@@ -1,10 +1,18 @@
 import os
 import numpy as np
+import torch
 import gzip
 import pickle
 from copy import deepcopy
 
 ########################################################################################################################
+def robust_softplus(x):
+    """
+    Computes log(1 + exp(x)) robustly to prevent overflow to infinity.
+    Float32 max is ~3.4e38, so exp(x) overflows if x > ~88.7.
+    """
+    return torch.log1p(torch.exp(torch.clamp(x, max=85.0)))
+
 def print_arguments(args):
     print('=' * 100)
     print('Arguments =')

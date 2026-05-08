@@ -16,6 +16,10 @@ class BayesianMLP(torch.nn.Module):
         # self.init_lr = args.lr
         # dim=60  #100k
         # dim=1200
+        self.cl_mode = getattr(args, 'cl_mode', 'task-incremental')
+        self.core_size = args.hidden_n
+        self.growth_rate = getattr(args, 'growth_rate', 5)
+        
         dim=args.hidden_n
         layers=args.layers
 
@@ -56,21 +60,56 @@ class BayesianMLP(torch.nn.Module):
             # 3. Calculate inhibition term
             P = c * torch.nn.functional.relu(z)
             
-            # 4. Apply directional inhibition (from older to newer neurons)
-            S = torch.cumsum(P, dim=-1) - P
+            # 4. Apply Block-wise directional inhibition
+            H = self.core_size
+            G = self.growth_rate
+            N = P.shape[-1]
             
-            # Asymmetric Constraint: Old neurons should not inhibit each other to preserve function.
-            # Only 'New' neurons (added in current task) are forced to yield to older ones.
-            if hasattr(self.fc1, 'weight_mask_new'):
-                # weight_mask_new is (out_features, in_features); any(dim=-1) identifies new rows/neurons
-                is_new = self.fc1.weight_mask_new.any(dim=-1)
-                S = S * is_new.float()
-            
+            S = torch.zeros_like(P)
+            if N > H:
+                # Sum of pressures in the core (Block 0)
+                B0 = P[:, :H].sum(dim=-1, keepdim=True) # (batch, 1)
+                
+                # Sum of pressures in subsequent blocks (1, 2, ...)
+                P_rem = P[:, H:]
+                num_rem = P_rem.shape[-1]
+                num_blocks_rem = num_rem // G
+                
+                if num_blocks_rem > 0:
+                    # Group into blocks of size G and sum their pressures
+                    P_blocks = P_rem[:, :num_blocks_rem * G].view(P.shape[0], num_blocks_rem, G)
+                    B_rem = P_blocks.sum(dim=-1) # (batch, num_blocks_rem)
+                    
+                    B_all = torch.cat([B0, B_rem], dim=-1) # (batch, 1 + num_blocks_rem)
+                    B_cum = torch.cumsum(B_all, dim=-1)
+                    
+                    # S_blocks[m] is the total inhibition applied to Block m.
+                    # S_blocks = [0, B0, B0+B1, ...]
+                    S_blocks = torch.cat([torch.zeros_like(B0), B_cum[:, :-1]], dim=-1)
+                    
+                    # Expand back to individual neurons
+                    # Block 0 (core) always has 0 inhibition
+                    S[:, :H] = 0
+                    
+                    # Blocks 1, 2, ... each neuron in block k gets S_blocks[k]
+                    S_rem = S_blocks[:, 1:].repeat_interleave(G, dim=-1)
+                    S[:, H : H + S_rem.shape[-1]] = S_rem[:, :num_rem]
+
             # 5. Final activation
             gamma = getattr(self.args, 'gamma_inhibition', 1.0)
             x = torch.nn.functional.relu(z - gamma * S)
         else:
             x = torch.nn.functional.relu(z)
+        
+        # Soft Winner-Take-All: keep only top 30% of activated neurons
+        if getattr(self.args, 'soft_wta', False) and not is_static:
+            k = max(1, int(0.3 * x.shape[-1]))
+            # Find the k-th largest activation value per sample
+            topk_vals, _ = torch.topk(x, k, dim=-1)
+            threshold = topk_vals[:, -1:]  # (batch, 1) — the k-th value
+            # Zero out neurons below the threshold (mask is differentiable w.r.t. x)
+            x = x * (x >= threshold).float()
+
             
         y=[]
         if getattr(self, 'cl_mode', 'task-incremental') == 'domain-incremental':

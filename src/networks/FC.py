@@ -21,9 +21,19 @@ class BayesianLinear(nn.Module):
         self.static = getattr(args, 'static', False)
 
         # Variational Posterior Distributions
-        # mu: Normal(0, 0.1)
+        # mu initialization
         self.weight_mu = nn.Parameter(torch.empty((out_features, in_features),
-                                      device=self.device, dtype=torch.float32).normal_(0., 0.1),requires_grad=True)
+                                      device=self.device, dtype=torch.float32), requires_grad=True)
+        if getattr(args, 'orthogonal_init', False):
+            # Orthogonal initialization using QR
+            # Start with random matrix
+            x = torch.empty((out_features, in_features), device=self.device, dtype=torch.float32).normal_(0, 1)
+            # QR on transpose to orthogonalize rows
+            q, r = torch.linalg.qr(x.T, mode='reduced')
+            # Scale to match expected power (normal(0, 0.1) has row norm ~ 0.1 * sqrt(D))
+            self.weight_mu.data = q.T * (0.1 * (in_features**0.5))
+        else:
+            self.weight_mu.data.normal_(0., 0.1)
         
         # rho initialization
         rho_base = self._get_init_rho((out_features, in_features), args)
@@ -85,7 +95,29 @@ class BayesianLinear(nn.Module):
         device = self.device
 
         # New weight rows
-        new_w_mu = torch.zeros((n_new, self.in_features), device=device, dtype=torch.float32)
+        if getattr(self.args, 'orthogonal_init', False):
+            # Orthogonal initialization using QR to be orthogonal to existing space
+            # Start with random matrix
+            random_w = torch.empty((n_new, self.in_features), device=device, dtype=torch.float32).normal_(0, 0.1)
+            # Concatenate existing weights and random ones
+            full_w = torch.cat([self.weight_mu.data, random_w], dim=0) # (N_old + N_new, D)
+            
+            # QR on transpose to orthogonalize columns (which correspond to our rows)
+            # Mode='reduced' gives Q of shape (D, N_old + N_new)
+            q, r = torch.linalg.qr(full_w.T, mode='reduced')
+            
+            # The last n_new columns of Q (transposed) are the new orthonormal vectors
+            new_w_mu = q.T[-n_new:].to(device)
+            
+            # Scale to match existing norm so we don't destabilize
+            old_norm = self.weight_mu.data.norm(dim=1).mean()
+            if old_norm > 0:
+                new_w_mu = new_w_mu * old_norm
+            else:
+                new_w_mu = new_w_mu * 0.1 # fallback
+        else:
+            new_w_mu = torch.zeros((n_new, self.in_features), device=device, dtype=torch.float32)
+
         new_w_rho_base = self._get_init_rho((n_new, self.in_features), self.args)
         new_w_rho = new_w_rho_base + torch.empty((n_new, self.in_features), device=device, dtype=torch.float32).normal_(0., 0.1)
 

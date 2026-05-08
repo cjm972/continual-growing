@@ -10,7 +10,13 @@ class VariationalPosterior(torch.nn.Module):
         self.device = device
         # gaussian distribution to sample epsilon from
         self.normal = torch.distributions.Normal(0, 1)
-        self.sigma = torch.log1p(torch.exp(self.rho)).to(self.device)
+        from utils import robust_softplus
+        # self.sigma is no longer statically cached here to prevent inplace graph errors
+
+    @property
+    def sigma(self):
+        from utils import robust_softplus
+        return robust_softplus(self.rho).to(self.device)
 
     def sample(self):
         epsilon = self.normal.sample(self.rho.size()).to(self.device)

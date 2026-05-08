@@ -1,0 +1,44 @@
+Starting this run on :
+2026-05-06 14:10
+Load data...
+Input size = [1, 28, 28]
+Task info = [(0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10)]
+Inits...
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+****************************************************************************************************
+Task  0 (pmnist-0)
+****************************************************************************************************
+
+  [lr-check] task=0 epoch=0 (update_lr arg=0)
+    group 0: scalar lr=0.01
+    group 1: scalar lr=0.01
+Training epoch:  64%|█████████████████████████████▊                 | 596/938 [01:08<00:39,  8.72it/s]
+
+----------------------------------------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cmetzner/lalaland/continual_growing/src/run.py", line 202, in <module>
+    test_loss,test_acc=trainer.eval(u,xtest,ytest,debug=True)
+                       ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cmetzner/lalaland/continual_growing/src/train/trainer.py", line 502, in eval
+    loss = self.elbo_loss(images, targets, t, num_batches,sample=False,debug=debug)
+  File "/Users/cmetzner/lalaland/continual_growing/src/train/trainer.py", line 541, in elbo_loss
+    pred = self.model(input,sample=False)[t]
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cmetzner/miniconda3/envs/continual_growing/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/cmetzner/miniconda3/envs/continual_growing/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/Users/cmetzner/lalaland/continual_growing/src/networks/mlp_grow.py", line 116, in forward
+    out = self.classifier[0](x, sample)
+  File "/Users/cmetzner/miniconda3/envs/continual_growing/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/cmetzner/miniconda3/envs/continual_growing/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/Users/cmetzner/lalaland/continual_growing/src/networks/FC.py", line 185, in forward
+    return F.linear(input, weight, bias)
+           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt
