@@ -13,6 +13,7 @@ class BayesianMLP(torch.nn.Module):
         self.samples = args.samples
         self.device = args.device
         self.sbatch = args.sbatch
+        self.n_layers = args.layers
         # self.init_lr = args.lr
         # dim=60  #100k
         # dim=1200
@@ -24,8 +25,9 @@ class BayesianMLP(torch.nn.Module):
         layers=args.layers
 
         self.fc1 = BayesianLinear(ncha*size*size, dim, args)
-        if layers==2:
-            self.fc2 = BayesianLinear(dim, dim, args)
+        self.fc_hidden = []
+        for i in range(self.n_layers):
+            self.fc.append(BayesianLinear(dim, dim, args))
 
         self.args = args
         self.cl_mode = getattr(args, 'cl_mode', 'task-incremental')
@@ -46,7 +48,10 @@ class BayesianMLP(torch.nn.Module):
     def forward(self, x, sample=False):
         x = x.view(x.size(0),-1)
         z = self.fc1(x, sample)
+        for i in range(self.n_layers):
+            z = self.fc_hidden[i](z, sample)
         
+        # Successive inhibition (experimental feature)
         is_static = getattr(self.args, 'static', False)
         if getattr(self.args, 'successive_inhibition', False) and not is_static:
             # 1. Estimate empirical variance
